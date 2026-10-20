@@ -1,0 +1,7 @@
+name: robot
+description: Classic ring-modulation robot voice.
+chain:
+  - type: robot
+    params:
+      frequency: 90
+      mix: 1.0

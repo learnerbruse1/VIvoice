@@ -1,0 +1,11 @@
+name: deep-voice
+description: Lower the pitch and add a subtle echo.
+chain:
+  - type: pitch
+    params:
+      semitones: -5
+  - type: echo
+    params:
+      delay_seconds: 0.18
+      feedback: 0.3
+      mix: 0.35

@@ -1,0 +1,6 @@
+name: pitch-up
+description: Raise the pitch by seven semitones.
+chain:
+  - type: pitch
+    params:
+      semitones: 7
