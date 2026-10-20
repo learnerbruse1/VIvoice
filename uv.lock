@@ -1318,7 +1318,6 @@ wheels = [
 
 [[package]]
 name = "vivoice"
-version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "huggingface-hub" },
@@ -1362,4 +1361,4 @@ requires-dist = [
     { name = "torch", marker = "extra == 'ai'", specifier = ">=2.2" },
     { name = "types-pyyaml", marker = "extra == 'dev'", specifier = ">=6" },
 ]
-provides-extras = ["ai", "realtime", "dev"]
+provides-extras = ["ai", "dev", "realtime"]

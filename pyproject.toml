@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "vivoice"
-version = "0.1.0"
 description = "An offline-first, extensible voice changer with DSP effects and pluggable AI voice conversion."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11,<3.14"
 authors = [{ name = "VIvoice contributors" }]
 keywords = ["voice-changer", "audio", "dsp", "voice-conversion", "rvc", "pyside6"]
+dynamic = ["version"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "License :: OSI Approved :: MIT License",
@@ -52,6 +52,9 @@ Issues = "https://github.com/VIvoice/VIvoice/issues"
 [tool.hatch.build.targets.wheel]
 packages = ["src/vivoice"]
 
+[tool.hatch.version]
+path = "src/vivoice/_version.py"
+
 [tool.hatch.build.targets.wheel.force-include]
 "docs/USER_GUIDE.md" = "vivoice/resources/USER_GUIDE.md"
 "ETHICS.md" = "vivoice/resources/ETHICS.md"
@@ -73,7 +76,7 @@ warn_unused_ignores = true
 warn_redundant_casts = true
 
 [[tool.mypy.overrides]]
-module = ["torch", "torch.*", "soundfile", "scipy", "scipy.*"]
+module = ["torch", "torch.*", "soundfile", "scipy", "scipy.*", "sounddevice"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

@@ -15,10 +15,12 @@ from vivoice.core.errors import EffectError
 class RobotEffect(Effect):
     effect_type: ClassVar[str] = "robot"
     description: ClassVar[str] = "Ring-modulation robot voice with dry/wet mix."
+    streaming: ClassVar[bool] = True
     default_params: ClassVar[Mapping[str, Any]] = {"frequency": 90.0, "mix": 1.0}
 
     def __init__(self, params: Mapping[str, Any] | None = None) -> None:
         super().__init__(params)
+        self._frames_processed = 0
         frequency = float(self.params["frequency"])
         mix = float(self.params["mix"])
         if frequency <= 0.0:
@@ -27,9 +29,14 @@ class RobotEffect(Effect):
             raise EffectError("'mix' must be in [0, 1]")
 
     def process(self, samples: np.ndarray, context: EffectContext) -> np.ndarray:
-        time = np.arange(samples.shape[1], dtype=np.float32) / context.sample_rate
+        start = self._frames_processed
+        time = (start + np.arange(samples.shape[1], dtype=np.float32)) / context.sample_rate
         frequency = float(self.params["frequency"])
         carrier = np.sin(2.0 * np.pi * frequency * time).astype(np.float32)
         mix = float(self.params["mix"])
         wet = samples * carrier
+        self._frames_processed += samples.shape[1]
         return (samples * (1.0 - mix) + wet * mix).astype(np.float32)
+
+    def reset(self) -> None:
+        self._frames_processed = 0

@@ -94,7 +94,17 @@ vivoice devices    # 查看检测到的计算设备
 
 ### 第 7 步：实时变声（后续版本）
 
-实时流属于 v1 里程碑（见 [ROADMAP.md](ROADMAP.md)）。Windows 上实现
+自 v0.2 起，标有 `[streaming]` 的效果（gain/robot/echo/eq/noise-gate/reverb）
+可以先实时预览：
+
+```bash
+uv sync --extra realtime
+vivoice stream --preset examples/presets/broadcast.yaml
+vivoice stream --list-devices
+```
+
+按 `Ctrl+C` 停止。音高偏移与 AI 音色转换目前只支持离线处理；完整实时流
+（含这两类效果）属于 v1 里程碑（见 [ROADMAP.md](ROADMAP.md)）。Windows 上实现
 “麦克风 → 处理 → 其他应用”需要虚拟声卡：
 
 - VB-Cable（免费，闭源）：<https://vb-audio.com/Cable/>
@@ -199,8 +209,19 @@ vivoice devices
 
 ### Step 7: real-time (future milestone)
 
-Real-time streaming is planned for v1 (see [ROADMAP.md](ROADMAP.md)). On Windows,
-microphone → processing → other apps routing uses a virtual cable:
+Since v0.2, effects marked `[streaming]` (gain/robot/echo/eq/noise-gate/reverb)
+can be previewed in real time:
+
+```bash
+uv sync --extra realtime
+vivoice stream --preset examples/presets/broadcast.yaml
+vivoice stream --list-devices
+```
+
+Press `Ctrl+C` to stop. Pitch shift and AI voice conversion are offline-only for
+now; the full real-time path (including those effects) is planned for v1 (see
+[ROADMAP.md](ROADMAP.md)). On Windows, microphone → processing → other apps
+routing uses a virtual cable:
 
 - VB-Cable (freeware, closed source): <https://vb-audio.com/Cable/>
 

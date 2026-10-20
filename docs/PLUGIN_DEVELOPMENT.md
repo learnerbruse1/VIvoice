@@ -37,6 +37,11 @@ Rules:
 - Keep `process` deterministic: same input and params, same output.
 - Never mutate the input buffer; return a new array.
 - Put per-effect state on `self`, never in module-level globals.
+- Set `streaming = True` only when the effect honors the block contract: all
+  state lives on `self`, `reset()` restores the initial state, and `process()`
+  produces the same result offline as when fed equivalent blocks (covered by
+  the parametrized test in `tests/test_streaming.py`). Whole-signal effects
+  such as the phase vocoder keep `streaming = False`.
 
 ## Add a voice-conversion engine
 

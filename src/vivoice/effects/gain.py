@@ -14,6 +14,7 @@ from vivoice.core.effect import Effect, EffectContext, register_effect
 class GainEffect(Effect):
     effect_type: ClassVar[str] = "gain"
     description: ClassVar[str] = "Apply a dB gain and hard-clip to [-1, 1]."
+    streaming: ClassVar[bool] = True
     default_params: ClassVar[Mapping[str, Any]] = {"gain_db": 0.0}
 
     def process(self, samples: np.ndarray, context: EffectContext) -> np.ndarray:

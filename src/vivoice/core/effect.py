@@ -30,6 +30,7 @@ class Effect(ABC):
 
     effect_type: ClassVar[str]
     description: ClassVar[str] = ""
+    streaming: ClassVar[bool] = False
     required_params: ClassVar[Sequence[str]] = ()
     default_params: ClassVar[Mapping[str, Any]] = {}
 
@@ -49,6 +50,15 @@ class Effect(ABC):
     def to_config(self) -> dict[str, Any]:
         """Serializable form used by presets."""
         return {"type": self.effect_type, "params": dict(self.params)}
+
+    def reset(self) -> None:
+        """Clear per-render state.
+
+        Stateful effects override this. The offline pipeline calls it before
+        every render so results stay deterministic; streaming sessions call it
+        once when the session opens.
+        """
+        return None
 
 
 _REGISTRY: dict[str, type[Effect]] = {}

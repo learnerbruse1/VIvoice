@@ -5,6 +5,7 @@ import pytest
 
 from vivoice.audio import load_audio, save_audio
 from vivoice.core import Chain, ChainError, Effect, EffectContext
+from vivoice.core.errors import Cancelled
 
 
 def test_effects_run_in_order(sine_440: np.ndarray) -> None:
@@ -45,3 +46,11 @@ def test_render_file(tmp_path, robot_preset, sine_440: np.ndarray) -> None:
     output = load_audio(destination)
     assert output.samples.shape == sine_440.shape
     assert not np.allclose(output.samples, sine_440)
+
+
+def test_cancellation_stops_pipeline(sine_440: np.ndarray) -> None:
+    from vivoice.effects.gain import GainEffect
+
+    chain = Chain([GainEffect(), GainEffect(), GainEffect()])
+    with pytest.raises(Cancelled):
+        chain.process(sine_440, 48_000, should_cancel=lambda: True)

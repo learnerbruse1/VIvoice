@@ -5,7 +5,7 @@ import pytest
 
 from vivoice.core import VivoiceError
 from vivoice.core.effect import EffectContext, create_effect
-from vivoice.effects import gain, pitch, robot  # noqa: F401  (register built-ins)
+from vivoice.effects import echo, eq, gain, gate, pitch, reverb, robot  # noqa: F401
 from vivoice.models import ModelRegistry
 
 
@@ -63,3 +63,52 @@ def test_voice_conversion_without_engine_fails_cleanly(
     effect = create_effect("voice-conversion", {"model": "alice"})
     with pytest.raises(VivoiceError, match="PyTorch|RVC"):
         effect.process(sine_440, EffectContext(48_000, 2))
+
+
+def _sine(amplitude: float, frequency: float, seconds: float = 1.0) -> np.ndarray:
+    sample_rate = 48_000
+    time = np.arange(int(sample_rate * seconds), dtype=np.float32) / sample_rate
+    return (amplitude * np.sin(2.0 * np.pi * frequency * time)).astype(np.float32)[None, :]
+
+
+def test_eq_zero_gain_is_identity(sine_440: np.ndarray) -> None:
+    effect = create_effect("eq")
+    output = effect.process(sine_440, EffectContext(48_000, 2))
+    assert np.allclose(output, sine_440, atol=1e-4)
+
+
+def test_eq_low_shelf_boosts_lows() -> None:
+    effect = create_effect("eq", {"low_gain_db": 12.0})
+    low = _sine(0.2, 100.0)
+    high = _sine(0.2, 5000.0)
+    context = EffectContext(48_000, 1)
+    low_ratio = np.sqrt(np.mean(effect.process(low, context) ** 2)) / 0.2 * np.sqrt(2)
+    high_ratio = np.sqrt(np.mean(effect.process(high, context) ** 2)) / 0.2 * np.sqrt(2)
+    assert low_ratio > 2.0
+    assert high_ratio < 1.5
+
+
+def test_gate_passes_loud_and_silences_quiet() -> None:
+    effect = create_effect("noise-gate", {"threshold_db": -40.0})
+    context = EffectContext(48_000, 1)
+    loud = _sine(0.3, 440.0)
+    quiet = _sine(1e-4, 440.0)
+    loud_out = effect.process(loud, context)
+    quiet_out = create_effect("noise-gate", {"threshold_db": -40.0}).process(quiet, context)
+    assert np.sqrt(np.mean(loud_out**2)) > 0.15
+    assert np.sqrt(np.mean(quiet_out**2)) < 1e-5
+
+
+def test_reverb_impulse_decays() -> None:
+    effect = create_effect("reverb", {"mix": 0.3})
+    impulse = np.zeros((1, 48_000), dtype=np.float32)
+    impulse[0, 0] = 1.0
+    output = effect.process(impulse, EffectContext(48_000, 1))
+    assert output[0, 0] == pytest.approx(0.7, abs=1e-5)
+    assert np.max(np.abs(output[0, 1000:5000])) > 1e-4
+    assert np.max(np.abs(output)) <= 2.0
+
+
+def test_reverb_rejects_invalid_room_size() -> None:
+    with pytest.raises(VivoiceError, match="room_size"):
+        create_effect("reverb", {"room_size": 1.5})

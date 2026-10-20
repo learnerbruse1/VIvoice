@@ -14,6 +14,11 @@ _Avoid_: audio filter, DSP module
 The ordered sequence of Effects that processes one stream of audio.
 _Avoid_: pipeline, effect stack, audio graph
 
+**Stream**:
+The real-time, block-wise processing path that reuses the same Chain and Effect
+classes as offline rendering, holding state across blocks instead of resetting.
+_Avoid_: live mode, realtime mode
+
 **Preset**:
 A saved YAML document that names a Chain and the parameter values for every Effect in it.
 _Avoid_: profile, configuration, patch

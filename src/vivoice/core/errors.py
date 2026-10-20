@@ -39,3 +39,7 @@ class MissingDependencyError(VivoiceError):
 
 class UnsupportedFeatureError(VivoiceError):
     """A known-but-not-yet-implemented feature was requested."""
+
+
+class Cancelled(VivoiceError):
+    """A long-running operation was cancelled cooperatively."""

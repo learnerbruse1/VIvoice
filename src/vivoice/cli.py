@@ -5,13 +5,16 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
+import threading
 from collections.abc import Sequence
 from pathlib import Path
+
+import numpy as np
 
 import vivoice.effects  # noqa: F401  (registers built-in effects)
 from vivoice import __version__
 from vivoice.ai.device import describe_device
-from vivoice.core import VivoiceError
+from vivoice.core import Cancelled, MissingDependencyError, VivoiceError
 from vivoice.core.effect import registered_effects
 from vivoice.models import ModelRegistry, pull_model
 from vivoice.paths import guide_path, models_root
@@ -36,6 +39,17 @@ def build_parser() -> argparse.ArgumentParser:
 
     effects = subparsers.add_parser("effects", help="list registered effects")
     effects.set_defaults(handler=_cmd_effects)
+
+    stream = subparsers.add_parser("stream", help="process microphone input in real time")
+    stream.add_argument("--preset", type=Path, help="preset YAML file")
+    stream.add_argument("--samplerate", type=int, help="stream sample rate (default: preset value)")
+    stream.add_argument("--block", type=int, help="block size in frames")
+    stream.add_argument("--channels", type=int, help="input and output channel count")
+    stream.add_argument("--input-device", help="input device name or index")
+    stream.add_argument("--output-device", help="output device name or index")
+    stream.add_argument("--latency", choices=["low", "high"], help="PortAudio latency hint")
+    stream.add_argument("--list-devices", action="store_true", help="list audio devices and exit")
+    stream.set_defaults(handler=_cmd_stream)
 
     devices = subparsers.add_parser("devices", help="show the detected compute device")
     devices.add_argument("--device", default="auto", choices=["auto", "cpu", "cuda", "mps"])
@@ -83,6 +97,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         return int(args.handler(args))
+    except Cancelled:
+        print("cancelled", file=sys.stderr)
+        return 130
     except VivoiceError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
@@ -103,7 +120,69 @@ def _cmd_process(args: argparse.Namespace) -> int:
 
 def _cmd_effects(args: argparse.Namespace) -> int:
     for name, effect_class in sorted(registered_effects().items()):
-        print(f"{name:<20} {effect_class.description}")
+        marker = " [streaming]" if effect_class.streaming else ""
+        print(f"{name:<20} {effect_class.description}{marker}")
+    return 0
+
+
+def _cmd_stream(args: argparse.Namespace) -> int:
+    try:
+        import sounddevice as sd
+    except ImportError as exc:
+        raise MissingDependencyError(
+            "sounddevice is required for streaming. Run: uv sync --extra realtime"
+        ) from exc
+
+    if args.list_devices:
+        print(sd.query_devices())
+        return 0
+
+    if args.preset is None:
+        raise VivoiceError("--preset is required for streaming (or use --list-devices)")
+
+    preset = Preset.load(args.preset)
+    chain = preset.build_chain()
+    sample_rate = int(args.samplerate or preset.sample_rate)
+    session = chain.open_stream(sample_rate)
+    stop = threading.Event()
+
+    def callback(
+        indata: np.ndarray,
+        outdata: np.ndarray,
+        frames: int,
+        time_info: object,
+        status: object,
+    ) -> None:
+        if status:
+            print(status, file=sys.stderr)
+        block = np.ascontiguousarray(indata, dtype=np.float32).T
+        try:
+            processed = session.process_block(block)
+        except Exception:
+            stop.set()
+            raise sd.CallbackAbort from None
+        outdata.fill(0.0)
+        copied = min(frames, processed.shape[1])
+        channels = min(outdata.shape[1], processed.shape[0])
+        outdata[:copied, :channels] = processed[:channels, :copied].T
+
+    try:
+        with sd.Stream(
+            samplerate=sample_rate,
+            blocksize=args.block or 0,
+            dtype="float32",
+            device=(args.input_device, args.output_device),
+            channels=(args.channels, args.channels) if args.channels else None,
+            latency=args.latency or "low",
+            callback=callback,
+        ) as _:
+            print("streaming; press Ctrl+C to stop", file=sys.stderr)
+            while not stop.wait(0.25):
+                pass
+    except KeyboardInterrupt:
+        stop.set()
+    except (ValueError, sd.PortAudioError) as exc:
+        raise VivoiceError(f"Audio stream failed: {exc}") from exc
     return 0
 
 

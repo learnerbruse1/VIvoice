@@ -25,7 +25,8 @@ flowchart TD
 | `src/vivoice/audio.py` | Audio buffer, 48 kHz float32 convention, WAV/FLAC/OGG I/O |
 | `src/vivoice/core/effect.py` | `Effect` abstract base and the effect registry |
 | `src/vivoice/core/chain.py` | Ordered effect pipeline and offline file rendering |
-| `src/vivoice/effects/` | Built-in effects (gain, pitch, robot, echo, voice conversion) |
+| `src/vivoice/effects/` | Built-in effects (gain, pitch, robot, echo, EQ, gate, reverb, voice conversion) |
+| `src/vivoice/core/stream.py` | Block-wise `StreamSession` for real-time processing |
 | `src/vivoice/presets/` | YAML preset loading, validation, and saving |
 | `src/vivoice/models/` | Local voice-model registry and HuggingFace downloads |
 | `src/vivoice/ai/` | Compute-device resolver and the `VoiceConversionAdapter` boundary |
@@ -67,6 +68,16 @@ overrides it. Resolution failures raise `DeviceError`; a missing optional
 engine raises `MissingDependencyError` with setup instructions instead of a
 crash.
 
+### Streaming and cancellation
+
+`Chain.open_stream()` returns a `StreamSession` that processes
+`(channels, frames)` blocks with persistent effect state. Only effects with
+`streaming = True` may participate, so real-time quality depends on effects
+honoring the block contract (documented in
+[docs/PLUGIN_DEVELOPMENT.md](PLUGIN_DEVELOPMENT.md)). Long-running renders
+accept a `should_cancel` callback and raise `Cancelled` at effect boundaries;
+the GUI wires this to its Cancel button.
+
 ## Stability rules
 
 - The audio core has no mutable global state; state belongs to effect
@@ -76,6 +87,8 @@ crash.
   the GUI event loop and, in the real-time milestone, never on the audio
   callback.
 - Engine-specific rates live inside adapters, not in `Chain`.
+- Offline renders call `Effect.reset()` first so results are deterministic;
+  streaming sessions reset once when opened and keep state across blocks.
 
 See [docs/adr/](adr/) for the reasoning behind Python (0001), the adapter
 boundary (0002), and offline-first delivery (0003).

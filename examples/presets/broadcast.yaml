@@ -1,0 +1,15 @@
+name: broadcast
+description: Gated, EQed voice with a touch of room reverb.
+chain:
+  - type: noise-gate
+    params: {}
+  - type: eq
+    params:
+      low_gain_db: 2
+      mid_gain_db: 1
+      high_gain_db: 3
+  - type: reverb
+    params:
+      room_size: 0.35
+      damping: 0.6
+      mix: 0.15

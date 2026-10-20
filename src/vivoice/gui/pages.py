@@ -145,6 +145,7 @@ class ConvertPage(QWidget):
         self._worker = ConversionWorker(preset, input_path, output_path, self)
         self._worker.progress.connect(self.progress.setValue)
         self._worker.finished_ok.connect(self._on_finished)
+        self._worker.cancelled.connect(self._on_cancelled)
         self._worker.failed.connect(self._on_failed)
         self._worker.finished.connect(self._on_worker_done)
         self.start_button.setEnabled(False)
@@ -154,8 +155,10 @@ class ConvertPage(QWidget):
 
     def _cancel(self) -> None:
         if self._worker is not None and self._worker.isRunning():
-            self._worker.terminate()
-            self.status_label.setText("Cancelled.")
+            self._worker.cancel()
+
+    def _on_cancelled(self) -> None:
+        self.status_label.setText("Cancelled.")
 
     def _on_finished(self, output_path: str) -> None:
         self.progress.setValue(100)

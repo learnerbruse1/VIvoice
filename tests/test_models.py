@@ -39,6 +39,12 @@ def test_duplicate_name_is_rejected(tmp_path, registry: ModelRegistry) -> None:
         registry.add("alice", tmp_path / "voice.pth")
 
 
+def test_duplicate_name_is_case_insensitive(tmp_path, registry: ModelRegistry) -> None:
+    registry.add("Alice", tmp_path / "voice.pth")
+    with pytest.raises(ModelError, match="already exists"):
+        registry.add("alice", tmp_path / "voice.pth")
+
+
 def test_missing_checkpoint_is_rejected(tmp_path, registry: ModelRegistry) -> None:
     with pytest.raises(ModelError, match="not found"):
         registry.add("ghost", tmp_path / "missing.pth")

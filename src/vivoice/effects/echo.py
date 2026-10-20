@@ -16,6 +16,7 @@ from vivoice.core.errors import EffectError
 class EchoEffect(Effect):
     effect_type: ClassVar[str] = "echo"
     description: ClassVar[str] = "Feedback delay echo."
+    streaming: ClassVar[bool] = True
     default_params: ClassVar[Mapping[str, Any]] = {
         "delay_seconds": 0.2,
         "feedback": 0.35,
@@ -24,6 +25,7 @@ class EchoEffect(Effect):
 
     def __init__(self, params: Mapping[str, Any] | None = None) -> None:
         super().__init__(params)
+        self._zi: np.ndarray | None = None
         delay = float(self.params["delay_seconds"])
         feedback = float(self.params["feedback"])
         mix = float(self.params["mix"])
@@ -47,5 +49,14 @@ class EchoEffect(Effect):
         denominator[0] = 1.0
         denominator[delay_samples] = -feedback
 
-        processed = [lfilter(numerator, denominator, channel) for channel in samples]
-        return np.stack(processed).astype(np.float32)
+        order = numerator.shape[0] - 1
+        if self._zi is None or self._zi.shape[0] != samples.shape[0]:
+            zi = np.zeros((samples.shape[0], order))
+        else:
+            zi = self._zi
+        processed, zi = lfilter(numerator, denominator, samples, axis=1, zi=zi)
+        self._zi = zi
+        return processed.astype(np.float32)
+
+    def reset(self) -> None:
+        self._zi = None

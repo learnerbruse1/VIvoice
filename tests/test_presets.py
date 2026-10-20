@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from vivoice.core import ChainError, PresetError
@@ -38,3 +40,10 @@ def test_bad_yaml_is_rejected(tmp_path) -> None:
     path.write_text("name: [unclosed", encoding="utf-8")
     with pytest.raises(PresetError, match="YAML"):
         Preset.load(path)
+
+
+def test_all_example_presets_load() -> None:
+    root = Path(__file__).resolve().parents[1] / "examples" / "presets"
+    for path in sorted(root.glob("*.yaml")):
+        preset = Preset.load(path)
+        assert preset.build_chain().effects

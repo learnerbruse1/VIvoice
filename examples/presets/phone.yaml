@@ -1,0 +1,9 @@
+name: phone
+description: Narrow, mid-forward "phone call" voice.
+chain:
+  - type: eq
+    params:
+      low_gain_db: -8
+      mid_gain_db: 4
+      high_gain_db: -8
+      mid_freq: 1200

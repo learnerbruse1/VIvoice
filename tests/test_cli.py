@@ -9,6 +9,7 @@ def test_effects_lists_builtins(capsys) -> None:
     output = capsys.readouterr().out
     assert "gain" in output
     assert "voice-conversion" in output
+    assert "[streaming]" in output
 
 
 def test_process_with_preset(tmp_path, robot_preset, sine_440, capsys) -> None:
