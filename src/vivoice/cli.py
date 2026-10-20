@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import sys
 import threading
@@ -10,14 +11,17 @@ from collections.abc import Sequence
 from pathlib import Path
 
 import numpy as np
+import yaml
 
 import vivoice.effects  # noqa: F401  (registers built-in effects)
 from vivoice import __version__
 from vivoice.ai.device import describe_device
+from vivoice.config import UserConfig
 from vivoice.core import Cancelled, MissingDependencyError, VivoiceError
-from vivoice.core.effect import registered_effects
+from vivoice.core.effect import get_effect_class, registered_effects
 from vivoice.models import ModelRegistry, pull_model
 from vivoice.paths import guide_path, models_root
+from vivoice.plugins import load_plugins
 from vivoice.presets import Preset
 
 logger = logging.getLogger(__name__)
@@ -38,7 +42,23 @@ def build_parser() -> argparse.ArgumentParser:
     process.set_defaults(handler=_cmd_process)
 
     effects = subparsers.add_parser("effects", help="list registered effects")
+    effects.add_argument("type", nargs="?", help="show one effect's parameter schema")
     effects.set_defaults(handler=_cmd_effects)
+
+    schema = subparsers.add_parser("schema", help="export all effect schemas as JSON")
+    schema.set_defaults(handler=_cmd_schema)
+
+    config = subparsers.add_parser("config", help="view or change user settings")
+    config_sub = config.add_subparsers(dest="config_command", required=True)
+    config_list = config_sub.add_parser("list", help="print all settings")
+    config_list.set_defaults(handler=_cmd_config_list)
+    config_get = config_sub.add_parser("get", help="print one setting")
+    config_get.add_argument("key")
+    config_get.set_defaults(handler=_cmd_config_get)
+    config_set = config_sub.add_parser("set", help="change one setting")
+    config_set.add_argument("key")
+    config_set.add_argument("value")
+    config_set.set_defaults(handler=_cmd_config_set)
 
     stream = subparsers.add_parser("stream", help="process microphone input in real time")
     stream.add_argument("--preset", type=Path, help="preset YAML file")
@@ -92,7 +112,12 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+    try:
+        log_level = str(UserConfig().get("log_level")).upper()
+    except VivoiceError:
+        log_level = "INFO"
+    logging.basicConfig(level=log_level, format="%(levelname)s %(message)s")
+    load_plugins()
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
@@ -119,9 +144,26 @@ def _cmd_process(args: argparse.Namespace) -> int:
 
 
 def _cmd_effects(args: argparse.Namespace) -> int:
+    if args.type:
+        try:
+            schema = get_effect_class(args.type).params_schema()
+        except VivoiceError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(schema, indent=2))
+        return 0
     for name, effect_class in sorted(registered_effects().items()):
         marker = " [streaming]" if effect_class.streaming else ""
         print(f"{name:<20} {effect_class.description}{marker}")
+    return 0
+
+
+def _cmd_schema(args: argparse.Namespace) -> int:
+    schemas = {
+        name: effect_class.params_schema()
+        for name, effect_class in sorted(registered_effects().items())
+    }
+    print(json.dumps(schemas, indent=2))
     return 0
 
 
@@ -142,7 +184,8 @@ def _cmd_stream(args: argparse.Namespace) -> int:
 
     preset = Preset.load(args.preset)
     chain = preset.build_chain()
-    sample_rate = int(args.samplerate or preset.sample_rate)
+    config = UserConfig().load()
+    sample_rate = int(args.samplerate or config["sample_rate"])
     session = chain.open_stream(sample_rate)
     stop = threading.Event()
 
@@ -169,9 +212,12 @@ def _cmd_stream(args: argparse.Namespace) -> int:
     try:
         with sd.Stream(
             samplerate=sample_rate,
-            blocksize=args.block or 0,
+            blocksize=args.block if args.block is not None else int(config["block_size"]),
             dtype="float32",
-            device=(args.input_device, args.output_device),
+            device=(
+                args.input_device or config["input_device"],
+                args.output_device or config["output_device"],
+            ),
             channels=(args.channels, args.channels) if args.channels else None,
             latency=args.latency or "low",
             callback=callback,
@@ -183,6 +229,23 @@ def _cmd_stream(args: argparse.Namespace) -> int:
         stop.set()
     except (ValueError, sd.PortAudioError) as exc:
         raise VivoiceError(f"Audio stream failed: {exc}") from exc
+    return 0
+
+
+def _cmd_config_list(args: argparse.Namespace) -> int:
+    print(yaml.safe_dump(UserConfig().load(), sort_keys=False, allow_unicode=True), end="")
+    return 0
+
+
+def _cmd_config_get(args: argparse.Namespace) -> int:
+    print(UserConfig().get(args.key))
+    return 0
+
+
+def _cmd_config_set(args: argparse.Namespace) -> int:
+    value = yaml.safe_load(args.value)
+    UserConfig().set(args.key, value)
+    print(f"set {args.key} = {value!r}")
     return 0
 
 

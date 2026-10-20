@@ -3,8 +3,10 @@
 from vivoice.core.chain import Chain
 from vivoice.core.effect import Effect, EffectContext, create_effect, registered_effects
 from vivoice.core.errors import (
+    AudioIOError,
     Cancelled,
     ChainError,
+    ConfigError,
     DeviceError,
     EffectError,
     MissingDependencyError,
@@ -17,9 +19,11 @@ from vivoice.core.errors import (
 from vivoice.core.stream import StreamSession
 
 __all__ = [
+    "AudioIOError",
     "Cancelled",
     "Chain",
     "ChainError",
+    "ConfigError",
     "DeviceError",
     "Effect",
     "EffectContext",

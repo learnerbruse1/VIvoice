@@ -19,6 +19,16 @@ The real-time, block-wise processing path that reuses the same Chain and Effect
 classes as offline rendering, holding state across blocks instead of resetting.
 _Avoid_: live mode, realtime mode
 
+**Plugin**:
+A third-party Effect or VoiceConversionAdapter installed through a Python
+entry-point group and registered at startup.
+_Avoid_: extension, addon
+
+**User Config**:
+The validated YAML file of per-user preferences (devices, sample rate, log
+level) under the user's VIvoice data directory.
+_Avoid_: settings file, preferences
+
 **Preset**:
 A saved YAML document that names a Chain and the parameter values for every Effect in it.
 _Avoid_: profile, configuration, patch

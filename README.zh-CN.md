@@ -28,9 +28,12 @@ VIvoice 是一个「离线优先、可扩展」的变声器。它把确定性 DS
 - 内置效果：增益、音高偏移（相位声码器）、机器人（环形调制）、回声、三段 EQ、
   噪声门、混响
 - YAML 预设与效果注册表（`vivoice effects`）
-- 可流式效果的实时预览（`vivoice stream`）
+- 实时预览（`vivoice stream`）支持实时音高偏移；离线渲染仍使用更高音质的相位声码器
+- 分块渲染：内存有界、平滑进度、可随时取消
 - 本地音色模型管理（`vivoice model add/list/remove`）与 HuggingFace 下载（`vivoice model pull <repo-id>`）
 - 计算设备自动检测：CUDA → MPS → CPU，并支持 `--device` 覆盖
+- 入口点插件系统与 JSON 参数 Schema（`vivoice schema`、`vivoice effects <类型>`）
+- 用户设置（`vivoice config list|get|set`）
 - 中英双语 README，应用内置详细使用指南（带步骤与链接）
 
 ## 快速开始
@@ -58,12 +61,14 @@ uv run vivoice model pull <hf-repo-id> # 或：vivoice model add path/to/model.p
 ```bash
 vivoice process input.wav output.wav --preset examples/presets/robot.yaml
 vivoice effects                    # 列出已注册效果
+vivoice schema                     # 导出 JSON Schema 供工具使用
 vivoice devices                    # 显示检测到的计算设备
 vivoice model add voice.pth --name alice --index voice.index
 vivoice model list
 vivoice model pull wok000/vcclient000
 vivoice gui                        # 启动桌面应用
 vivoice stream --preset examples/presets/broadcast.yaml
+vivoice config set sample_rate 44100
 ```
 
 完整步骤见 `vivoice --help` 和 [docs/USER_GUIDE.md](docs/USER_GUIDE.md)。

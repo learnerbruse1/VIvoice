@@ -16,6 +16,10 @@ flowchart TD
     Models --> Store["Model registry (~/.vivoice/models)"]
     Store --> Hub["HuggingFace downloads"]
     Engine --> Devices["Device resolver (CUDA → MPS → CPU)"]
+    Plugins["Entry-point plugins"] --> Effects
+    Plugins --> Adapter
+    Config["User config (YAML)"] --> GUI
+    Config --> CLI
 ```
 
 ## Modules
@@ -32,6 +36,8 @@ flowchart TD
 | `src/vivoice/ai/` | Compute-device resolver and the `VoiceConversionAdapter` boundary |
 | `src/vivoice/gui/` | PySide6 application (thin front-end, no DSP logic) |
 | `src/vivoice/cli.py` | Headless command-line front-end |
+| `src/vivoice/plugins.py` | Third-party effects/adapters via entry points |
+| `src/vivoice/config.py` | Validated user settings in `~/.vivoice/config.yaml` |
 
 ## Core contracts
 
@@ -71,12 +77,22 @@ crash.
 ### Streaming and cancellation
 
 `Chain.open_stream()` returns a `StreamSession` that processes
-`(channels, frames)` blocks with persistent effect state. Only effects with
-`streaming = True` may participate, so real-time quality depends on effects
-honoring the block contract (documented in
+`(channels, frames)` blocks with persistent effect state via
+`Effect.process_stream` (defaulting to `process`). Only effects with
+`streaming = True` may participate. Effects with `block_process = True` also
+let `render_file` process one block at a time — bounded memory, smooth
+progress, and per-block cancellation. Both contracts are documented in
 [docs/PLUGIN_DEVELOPMENT.md](PLUGIN_DEVELOPMENT.md)). Long-running renders
 accept a `should_cancel` callback and raise `Cancelled` at effect boundaries;
 the GUI wires this to its Cancel button.
+
+### Plugins and introspection
+
+Installed packages self-register through the `vivoice.effects` and
+`vivoice.adapters` entry-point groups. Every effect exposes a JSON-serializable
+`params_schema()` (defaults, required flags, numeric bounds, enums), available
+as `vivoice effects <type>` and `vivoice schema`, so external tools can build
+UIs and validate presets without importing Python.
 
 ## Stability rules
 

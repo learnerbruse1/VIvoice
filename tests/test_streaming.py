@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from vivoice.core import Chain, ChainError, EffectContext, create_effect
+from vivoice.core import Chain, EffectContext, create_effect
 
 STREAMING_EFFECTS = [
     ("gain", {"gain_db": 3.0}),
@@ -41,7 +41,42 @@ def test_streaming_matches_offline(effect_type: str, params: dict) -> None:
     assert np.allclose(streamed, offline, atol=1e-5, rtol=1e-4)
 
 
-def test_non_streaming_effects_are_rejected() -> None:
+def test_pitch_effect_is_streamable() -> None:
     chain = Chain([create_effect("pitch", {"semitones": 3.0})])
-    with pytest.raises(ChainError, match="not available for streaming"):
-        chain.open_stream(48_000)
+    assert chain.open_stream(48_000) is not None
+
+
+def test_pitch_stream_blocks_match_whole() -> None:
+    sample_rate = 48_000
+    signal = _signal()
+    whole = create_effect("pitch", {"semitones": 5.0}).process_stream(
+        signal, EffectContext(sample_rate, signal.shape[0])
+    )
+    session = Chain([create_effect("pitch", {"semitones": 5.0})]).open_stream(sample_rate)
+    blocks = [
+        session.process_block(signal[:, start : start + 333])
+        for start in range(0, signal.shape[1], 333)
+    ]
+    streamed = np.concatenate(blocks, axis=1)
+    assert np.array_equal(streamed, whole)
+
+
+@pytest.mark.parametrize(
+    ("semitones", "expected"),
+    [(12.0, 880.0), (-12.0, 220.0)],
+)
+def test_pitch_stream_shifts_frequency(semitones: float, expected: float) -> None:
+    sample_rate = 48_000
+    time = np.arange(sample_rate * 3, dtype=np.float32) / sample_rate
+    signal = (0.3 * np.sin(2.0 * np.pi * 440.0 * time)).astype(np.float32)[None, :]
+    output = create_effect("pitch", {"semitones": semitones}).process_stream(
+        signal, EffectContext(sample_rate, 1)
+    )
+    middle = output[0, sample_rate : 2 * sample_rate]
+    window = np.hanning(middle.shape[0]).astype(np.float32)
+    spectrum = np.abs(np.fft.rfft(middle * window))
+    frequencies = np.fft.rfftfreq(middle.shape[0], d=1.0 / sample_rate)
+    dominant = float(frequencies[np.argmax(spectrum)])
+    assert expected * 0.9 <= dominant <= expected * 1.1
+    assert np.isfinite(output).all()
+    assert float(np.max(np.abs(output))) <= 1.1

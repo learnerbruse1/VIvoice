@@ -4,6 +4,30 @@ All notable changes to VIvoice are documented in this file. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] - 2026-10-20
+
+### Added
+
+- Chunked, bounded-memory offline rendering with smooth progress and per-block
+  cancellation (used automatically when every effect is `block_process`).
+- Real-time pitch shifting via a delay-line algorithm with crossfaded wraps;
+  offline quality stays on the phase vocoder (`process_stream` contract).
+- Third-party plugins through the `vivoice.effects` / `vivoice.adapters`
+  entry-point groups, plus JSON parameter schemas (`vivoice effects <type>`,
+  `vivoice schema`).
+- User configuration (`vivoice config list|get|set`) feeding stream and GUI
+  defaults; atomic writes and validation.
+- `ModelAddWorker` (local imports no longer block the GUI) and a global GUI
+  exception hook.
+- `AGENTS.md` and `docs/AI_HANDBOOK.md` for AI contributors.
+
+### Fixed
+
+- `AudioIOError` wraps file read/write failures so the CLI reports them as
+  expected errors instead of tracebacks.
+- Cancelled chunked renders remove the partial output file.
+- Precise shape/state checks in the chunked render path.
+
 ## [0.2.0] - 2026-10-20
 
 ### Added

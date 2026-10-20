@@ -24,8 +24,9 @@ from PySide6.QtWidgets import (
 )
 
 from vivoice.ai.device import describe_device
+from vivoice.config import load_user_config
 from vivoice.core.errors import VivoiceError
-from vivoice.gui.workers import ConversionWorker, ModelPullWorker
+from vivoice.gui.workers import ConversionWorker, ModelAddWorker, ModelPullWorker
 from vivoice.models import ModelRegistry
 from vivoice.paths import shipped_presets_dir, user_presets_dir
 from vivoice.presets import Preset
@@ -62,7 +63,7 @@ class ConvertPage(QWidget):
         self.preset_combo.currentIndexChanged.connect(lambda _index: self._update_chain_label())
         form.addRow("Preset", self.preset_combo)
 
-        self.device_label = QLabel(describe_device(), self)
+        self.device_label = QLabel(describe_device(str(load_user_config()["device"])), self)
         form.addRow("Device", self.device_label)
 
         self.chain_label = QLabel("", self)
@@ -177,6 +178,7 @@ class ModelsPage(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._pull_worker: ModelPullWorker | None = None
+        self._add_worker: ModelAddWorker | None = None
         self.registry = ModelRegistry()
 
         self.list_widget = QListWidget(self)
@@ -217,12 +219,17 @@ class ModelsPage(QWidget):
         name, ok = QInputDialog.getText(self, "Model name", "Name for this voice model:")
         if not ok or not name.strip():
             return
-        try:
-            self.registry.add(name, checkpoint, index or None)
-        except VivoiceError as exc:
-            QMessageBox.critical(self, "Import failed", str(exc))
-            return
+        self._add_worker = ModelAddWorker(name, checkpoint, index or None, parent=self)
+        self._add_worker.finished_ok.connect(self._on_add_finished)
+        self._add_worker.failed.connect(self._on_add_failed)
+        self._add_worker.start()
+
+    def _on_add_finished(self, name: str) -> None:
         self.refresh()
+        QMessageBox.information(self, "Import complete", f"Imported voice model '{name}'.")
+
+    def _on_add_failed(self, message: str) -> None:
+        QMessageBox.critical(self, "Import failed", message)
 
     def _pull(self) -> None:
         repo_id, ok = QInputDialog.getText(

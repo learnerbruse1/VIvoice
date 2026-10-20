@@ -17,10 +17,16 @@ class EchoEffect(Effect):
     effect_type: ClassVar[str] = "echo"
     description: ClassVar[str] = "Feedback delay echo."
     streaming: ClassVar[bool] = True
+    block_process: ClassVar[bool] = True
     default_params: ClassVar[Mapping[str, Any]] = {
         "delay_seconds": 0.2,
         "feedback": 0.35,
         "mix": 0.5,
+    }
+    param_constraints: ClassVar[Mapping[str, Mapping[str, Any]]] = {
+        "delay_seconds": {"minimum": 0.001, "maximum": 5.0},
+        "feedback": {"minimum": 0.0, "maximum": 0.99},
+        "mix": {"minimum": 0.0, "maximum": 1.0},
     }
 
     def __init__(self, params: Mapping[str, Any] | None = None) -> None:

@@ -21,6 +21,10 @@ class VoiceConversionEffect(Effect):
     description: ClassVar[str] = "Change speaker identity through an AI adapter."
     required_params: ClassVar[tuple[str, ...]] = ("model",)
     default_params: ClassVar[Mapping[str, Any]] = {"engine": "rvc", "device": "auto"}
+    param_constraints: ClassVar[Mapping[str, Mapping[str, Any]]] = {
+        "engine": {"enum": ["rvc"]},
+        "device": {"enum": ["auto", "cpu", "cuda", "mps"]},
+    }
 
     def process(self, samples: np.ndarray, context: EffectContext) -> np.ndarray:
         engine = str(self.params["engine"])

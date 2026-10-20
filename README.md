@@ -31,10 +31,15 @@ similar sites.
 - Built-in effects: gain, pitch shift (phase vocoder), robot (ring modulation), echo,
   three-band EQ, noise gate, reverb
 - YAML presets and an effect registry (`vivoice effects`)
-- Real-time preview for block-friendly effects (`vivoice stream`)
+- Real-time preview (`vivoice stream`) with a streaming pitch shifter; offline
+  rendering keeps the higher-quality phase vocoder
+- Chunked, bounded-memory rendering with smooth progress and cancellation
 - Local voice-model manager (`vivoice model add/list/remove`) and HuggingFace downloads
   (`vivoice model pull <repo-id>`)
 - Automatic compute-device detection: CUDA → MPS → CPU, with `--device` override
+- Third-party plugins via entry points and JSON parameter schemas
+  (`vivoice schema`, `vivoice effects <type>`)
+- User settings (`vivoice config list|get|set`)
 - Bilingual README and a detailed in-app usage guide with links
 
 ## Quick start
@@ -62,12 +67,14 @@ uv run vivoice model pull <hf-repo-id> # or: vivoice model add path/to/model.pth
 ```bash
 vivoice process input.wav output.wav --preset examples/presets/robot.yaml
 vivoice effects                    # list registered effects
+vivoice schema                     # export JSON schemas for tooling
 vivoice devices                    # show the detected compute device
 vivoice model add voice.pth --name alice --index voice.index
 vivoice model list
 vivoice model pull wok000/vcclient000
 vivoice gui                        # launch the desktop app
 vivoice stream --preset examples/presets/broadcast.yaml
+vivoice config set sample_rate 44100
 ```
 
 See `vivoice --help` and [docs/USER_GUIDE.md](docs/USER_GUIDE.md) for the full walkthrough.

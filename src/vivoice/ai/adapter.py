@@ -54,3 +54,8 @@ def get_adapter(engine: str, device: Device) -> VoiceConversionAdapter:
             f"Unknown voice-conversion engine '{engine}'. Available: {available}"
         ) from None
     return adapter_class(device)
+
+
+def unregister_adapter(engine: str) -> None:
+    """Remove an adapter from the registry (used by tests and plugin reloads)."""
+    _ADAPTERS.pop(engine, None)

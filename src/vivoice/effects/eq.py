@@ -69,6 +69,7 @@ class EqualizerEffect(Effect):
     effect_type: ClassVar[str] = "eq"
     description: ClassVar[str] = "Three-band equalizer (low shelf, peak, high shelf)."
     streaming: ClassVar[bool] = True
+    block_process: ClassVar[bool] = True
     default_params: ClassVar[Mapping[str, Any]] = {
         "low_gain_db": 0.0,
         "mid_gain_db": 0.0,
@@ -77,6 +78,15 @@ class EqualizerEffect(Effect):
         "mid_freq": 1000.0,
         "high_freq": 5000.0,
         "q": 0.707,
+    }
+    param_constraints: ClassVar[Mapping[str, Mapping[str, Any]]] = {
+        "low_gain_db": {"minimum": -24.0, "maximum": 24.0},
+        "mid_gain_db": {"minimum": -24.0, "maximum": 24.0},
+        "high_gain_db": {"minimum": -24.0, "maximum": 24.0},
+        "low_freq": {"minimum": 20.0, "maximum": 20000.0},
+        "mid_freq": {"minimum": 20.0, "maximum": 20000.0},
+        "high_freq": {"minimum": 20.0, "maximum": 20000.0},
+        "q": {"minimum": 0.1, "maximum": 10.0},
     }
 
     def __init__(self, params: Mapping[str, Any] | None = None) -> None:

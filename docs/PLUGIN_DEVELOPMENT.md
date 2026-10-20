@@ -42,6 +42,23 @@ Rules:
   produces the same result offline as when fed equivalent blocks (covered by
   the parametrized test in `tests/test_streaming.py`). Whole-signal effects
   such as the phase vocoder keep `streaming = False`.
+- Set `block_process = True` only when `process` itself accepts blocks with
+  state carried across calls; this enables bounded-memory file rendering.
+- Provide `param_constraints` (minimum/maximum/enum) so `params_schema()` is
+  useful to GUIs and external tooling.
+
+### Ship an effect as a third-party plugin
+
+Declare an entry point in your package's `pyproject.toml`:
+
+```toml
+[project.entry-points."vivoice.effects"]
+my-effect = "my_package.effects"
+```
+
+The module registers on import; VIvoice calls it at startup. Adapters use the
+`vivoice.adapters` group the same way. The registry stays discoverable through
+`vivoice effects` and `vivoice schema`.
 
 ## Add a voice-conversion engine
 

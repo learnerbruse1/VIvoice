@@ -16,7 +16,12 @@ class RobotEffect(Effect):
     effect_type: ClassVar[str] = "robot"
     description: ClassVar[str] = "Ring-modulation robot voice with dry/wet mix."
     streaming: ClassVar[bool] = True
+    block_process: ClassVar[bool] = True
     default_params: ClassVar[Mapping[str, Any]] = {"frequency": 90.0, "mix": 1.0}
+    param_constraints: ClassVar[Mapping[str, Mapping[str, Any]]] = {
+        "frequency": {"minimum": 1.0, "maximum": 20000.0},
+        "mix": {"minimum": 0.0, "maximum": 1.0},
+    }
 
     def __init__(self, params: Mapping[str, Any] | None = None) -> None:
         super().__init__(params)

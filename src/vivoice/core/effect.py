@@ -31,8 +31,10 @@ class Effect(ABC):
     effect_type: ClassVar[str]
     description: ClassVar[str] = ""
     streaming: ClassVar[bool] = False
+    block_process: ClassVar[bool] = False
     required_params: ClassVar[Sequence[str]] = ()
     default_params: ClassVar[Mapping[str, Any]] = {}
+    param_constraints: ClassVar[Mapping[str, Mapping[str, Any]]] = {}
 
     def __init__(self, params: Mapping[str, Any] | None = None) -> None:
         merged: dict[str, Any] = {**self.default_params, **(params or {})}
@@ -60,6 +62,34 @@ class Effect(ABC):
         """
         return None
 
+    def process_stream(self, samples: np.ndarray, context: EffectContext) -> np.ndarray:
+        """Process one block in the real-time path.
+
+        The default delegates to :meth:`process`. Effects with a dedicated
+        streaming algorithm (e.g. the pitch shifter) override it.
+        """
+        return self.process(samples, context)
+
+    @classmethod
+    def params_schema(cls) -> dict[str, Any]:
+        """JSON-serializable description of the effect's parameters."""
+        names = dict.fromkeys((*cls.default_params, *cls.required_params))
+        params: dict[str, Any] = {}
+        for name in names:
+            entry: dict[str, Any] = {
+                "required": name in cls.required_params,
+                "default": cls.default_params.get(name),
+            }
+            entry.update(cls.param_constraints.get(name, {}))
+            params[name] = entry
+        return {
+            "type": cls.effect_type,
+            "description": cls.description,
+            "streaming": cls.streaming,
+            "block_process": cls.block_process,
+            "params": params,
+        }
+
 
 _REGISTRY: dict[str, type[Effect]] = {}
 
@@ -86,3 +116,8 @@ def create_effect(effect_type: str, params: Mapping[str, Any] | None = None) -> 
 def registered_effects() -> dict[str, type[Effect]]:
     """Snapshot of the registry, keyed by effect type."""
     return dict(_REGISTRY)
+
+
+def unregister_effect(effect_type: str) -> None:
+    """Remove an effect from the registry (used by tests and plugin reloads)."""
+    _REGISTRY.pop(effect_type, None)

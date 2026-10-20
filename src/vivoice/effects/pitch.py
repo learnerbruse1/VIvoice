@@ -79,10 +79,21 @@ def _match_length(signal: np.ndarray, target: int) -> np.ndarray:
 class PitchShiftEffect(Effect):
     effect_type: ClassVar[str] = "pitch"
     description: ClassVar[str] = "Shift pitch in semitones, preserving duration."
+    streaming: ClassVar[bool] = True
     default_params: ClassVar[Mapping[str, Any]] = {"semitones": 0.0}
+    param_constraints: ClassVar[Mapping[str, Mapping[str, Any]]] = {
+        "semitones": {"minimum": -24.0, "maximum": 24.0}
+    }
 
     def __init__(self, params: Mapping[str, Any] | None = None) -> None:
         super().__init__(params)
+        self._stream_buffers: np.ndarray | None = None
+        self._write_totals: np.ndarray | None = None
+        self._read_positions: np.ndarray | None = None
+        self._fade_remaining: np.ndarray | None = None
+        self._fade_tail: np.ndarray | None = None
+        self._last_outputs: np.ndarray | None = None
+        self._tail_positions: np.ndarray | None = None
         semitones = float(self.params["semitones"])
         if not -24.0 <= semitones <= 24.0:
             raise EffectError("'semitones' must be in [-24, 24]")
@@ -100,3 +111,93 @@ class PitchShiftEffect(Effect):
             shifted = resample_poly(stretched, up=1000, down=down).astype(np.float32)
             channels.append(_match_length(shifted, samples.shape[1]))
         return np.stack(channels)
+
+    def process_stream(self, samples: np.ndarray, context: EffectContext) -> np.ndarray:
+        """Real-time pitch shift: delay-line resampling with crossfaded wraps."""
+        factor = 2.0 ** (float(self.params["semitones"]) / 12.0)
+        if factor == 1.0:
+            return np.array(samples, copy=True)
+        channels = samples.shape[0]
+        if self._stream_buffers is None or self._stream_buffers.shape[0] != channels:
+            self._stream_buffers = np.zeros((channels, _DELAY_SAMPLES), dtype=np.float32)
+            self._write_totals = np.zeros(channels, dtype=np.int64)
+            self._read_positions = np.zeros(channels, dtype=np.float64)
+            self._fade_remaining = np.zeros(channels, dtype=np.int64)
+            self._fade_tail = np.zeros((channels, _FADE_SAMPLES), dtype=np.float32)
+            self._last_outputs = np.zeros((channels, _FADE_SAMPLES), dtype=np.float32)
+            self._tail_positions = np.zeros(channels, dtype=np.int64)
+        buffers = self._stream_buffers
+        write_totals = self._write_totals
+        read_positions = self._read_positions
+        fade_remaining = self._fade_remaining
+        fade_tail = self._fade_tail
+        last_outputs = self._last_outputs
+        tail_positions = self._tail_positions
+        assert buffers is not None
+        assert write_totals is not None
+        assert read_positions is not None
+        assert fade_remaining is not None
+        assert fade_tail is not None
+        assert last_outputs is not None
+        assert tail_positions is not None
+
+        output = np.empty_like(samples)
+        for channel in range(channels):
+            buffer = buffers[channel]
+            write_total = int(write_totals[channel])
+            read = float(read_positions[channel])
+            tail_position = int(tail_positions[channel])
+            for frame in range(samples.shape[1]):
+                buffer[write_total % _DELAY_SAMPLES] = samples[channel, frame]
+                write_total += 1
+
+                base = int(np.floor(read)) % _DELAY_SAMPLES
+                fraction = read - np.floor(read)
+                next_base = (base + 1) % _DELAY_SAMPLES
+                value = buffer[base] * (1.0 - fraction) + buffer[next_base] * fraction
+
+                remaining = int(fade_remaining[channel])
+                if remaining > 0:
+                    alpha = 1.0 - remaining / _FADE_SAMPLES
+                    tail = float(fade_tail[channel, _FADE_SAMPLES - remaining])
+                    value = tail * (1.0 - alpha) + value * alpha
+                    fade_remaining[channel] = remaining - 1
+                output[channel, frame] = value
+
+                last_outputs[channel, tail_position] = value
+                tail_position = (tail_position + 1) % _FADE_SAMPLES
+                read += factor
+
+                jumped = False
+                if read >= write_total:
+                    read -= _DELAY_SAMPLES
+                    jumped = True
+                elif read < write_total - _DELAY_SAMPLES:
+                    read += _DELAY_SAMPLES
+                    jumped = True
+                if jumped and int(fade_remaining[channel]) == 0:
+                    fade_tail[channel, : _FADE_SAMPLES - tail_position] = last_outputs[
+                        channel, tail_position:
+                    ]
+                    fade_tail[channel, _FADE_SAMPLES - tail_position :] = last_outputs[
+                        channel, :tail_position
+                    ]
+                    fade_remaining[channel] = _FADE_SAMPLES
+
+            write_totals[channel] = write_total
+            read_positions[channel] = read
+            tail_positions[channel] = tail_position
+        return output
+
+    def reset(self) -> None:
+        self._stream_buffers = None
+        self._write_totals = None
+        self._read_positions = None
+        self._fade_remaining = None
+        self._fade_tail = None
+        self._last_outputs = None
+        self._tail_positions = None
+
+
+_DELAY_SAMPLES = 2048
+_FADE_SAMPLES = 64

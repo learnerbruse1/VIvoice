@@ -8,7 +8,7 @@ from pathlib import Path
 from PySide6.QtCore import QThread, Signal
 
 from vivoice.core.errors import Cancelled, VivoiceError
-from vivoice.models import pull_model
+from vivoice.models import ModelRegistry, pull_model
 from vivoice.presets import Preset
 
 
@@ -71,3 +71,32 @@ class ModelPullWorker(QThread):
             self.failed.emit(f"Unexpected error: {exc}")
         else:
             self.finished_ok.emit(model.name, model.source)
+
+
+class ModelAddWorker(QThread):
+    """Copy a local checkpoint without blocking the event loop."""
+
+    finished_ok = Signal(str)
+    failed = Signal(str)
+
+    def __init__(
+        self,
+        name: str,
+        checkpoint: str | Path,
+        index: str | Path | None = None,
+        parent=None,
+    ) -> None:
+        super().__init__(parent)
+        self._name = name
+        self._checkpoint = Path(checkpoint)
+        self._index = Path(index) if index else None
+
+    def run(self) -> None:
+        try:
+            model = ModelRegistry().add(self._name, self._checkpoint, self._index)
+        except VivoiceError as exc:
+            self.failed.emit(str(exc))
+        except Exception as exc:  # noqa: BLE001
+            self.failed.emit(f"Unexpected error: {exc}")
+        else:
+            self.finished_ok.emit(model.name)

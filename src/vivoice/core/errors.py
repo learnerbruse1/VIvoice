@@ -43,3 +43,11 @@ class UnsupportedFeatureError(VivoiceError):
 
 class Cancelled(VivoiceError):
     """A long-running operation was cancelled cooperatively."""
+
+
+class AudioIOError(VivoiceError):
+    """An audio file could not be read or written."""
+
+
+class ConfigError(VivoiceError):
+    """A user configuration value is invalid."""

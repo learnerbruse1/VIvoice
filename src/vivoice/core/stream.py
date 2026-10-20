@@ -42,7 +42,7 @@ class StreamSession:
         context = EffectContext(sample_rate=self._sample_rate, channels=samples.shape[0])
         output = np.asarray(samples, dtype=np.float32)
         for effect in self._effects:
-            output = effect.process(output, context)
+            output = effect.process_stream(output, context)
             if output.shape != samples.shape:
                 raise ChainError(
                     f"Effect '{effect.effect_type}' changed the buffer shape from "

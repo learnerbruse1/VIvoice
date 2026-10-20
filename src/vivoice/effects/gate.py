@@ -16,11 +16,18 @@ class NoiseGateEffect(Effect):
     effect_type: ClassVar[str] = "noise-gate"
     description: ClassVar[str] = "Attenuate signals below a threshold."
     streaming: ClassVar[bool] = True
+    block_process: ClassVar[bool] = True
     default_params: ClassVar[Mapping[str, Any]] = {
         "threshold_db": -40.0,
         "attack_ms": 5.0,
         "release_ms": 100.0,
         "floor_db": -80.0,
+    }
+    param_constraints: ClassVar[Mapping[str, Mapping[str, Any]]] = {
+        "threshold_db": {"minimum": -90.0, "maximum": 0.0},
+        "attack_ms": {"minimum": 0.1, "maximum": 500.0},
+        "release_ms": {"minimum": 1.0, "maximum": 5000.0},
+        "floor_db": {"minimum": -120.0, "maximum": -10.0},
     }
 
     def __init__(self, params: Mapping[str, Any] | None = None) -> None:

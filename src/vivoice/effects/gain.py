@@ -15,7 +15,11 @@ class GainEffect(Effect):
     effect_type: ClassVar[str] = "gain"
     description: ClassVar[str] = "Apply a dB gain and hard-clip to [-1, 1]."
     streaming: ClassVar[bool] = True
+    block_process: ClassVar[bool] = True
     default_params: ClassVar[Mapping[str, Any]] = {"gain_db": 0.0}
+    param_constraints: ClassVar[Mapping[str, Mapping[str, Any]]] = {
+        "gain_db": {"minimum": -48.0, "maximum": 48.0}
+    }
 
     def process(self, samples: np.ndarray, context: EffectContext) -> np.ndarray:
         gain_db = float(self.params["gain_db"])

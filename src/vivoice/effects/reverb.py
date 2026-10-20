@@ -19,10 +19,16 @@ class ReverbEffect(Effect):
     effect_type: ClassVar[str] = "reverb"
     description: ClassVar[str] = "Room reverb from comb and all-pass delays."
     streaming: ClassVar[bool] = True
+    block_process: ClassVar[bool] = True
     default_params: ClassVar[Mapping[str, Any]] = {
         "room_size": 0.5,
         "damping": 0.5,
         "mix": 0.25,
+    }
+    param_constraints: ClassVar[Mapping[str, Mapping[str, Any]]] = {
+        "room_size": {"minimum": 0.01, "maximum": 0.99},
+        "damping": {"minimum": 0.0, "maximum": 1.0},
+        "mix": {"minimum": 0.0, "maximum": 1.0},
     }
 
     def __init__(self, params: Mapping[str, Any] | None = None) -> None:
