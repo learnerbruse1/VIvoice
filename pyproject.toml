@@ -30,7 +30,14 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-ai = ["torch>=2.2"]
+ai = [
+  "torch>=2.2",
+  "torchaudio>=2.2",
+  "huggingface-hub-rvc>=0.1.4",
+  "librosa>=0.10",
+  "safetensors>=0.4",
+  "transformers>=4.40",
+]
 realtime = ["sounddevice>=0.4.6,<1"]
 packaging = ["pyinstaller>=6.11,<7"]
 dev = [
@@ -77,7 +84,18 @@ warn_unused_ignores = true
 warn_redundant_casts = true
 
 [[tool.mypy.overrides]]
-module = ["torch", "torch.*", "soundfile", "scipy", "scipy.*", "sounddevice", "infer", "infer.*"]
+module = [
+  "torch",
+  "torch.*",
+  "soundfile",
+  "scipy",
+  "scipy.*",
+  "sounddevice",
+  "infer",
+  "infer.*",
+  "huggingface_hub_rvc",
+  "torchaudio",
+]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

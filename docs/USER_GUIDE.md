@@ -37,22 +37,22 @@ uv run vivoice-gui
 
 ### 第 4 步：让 AI 音色转换可用（可选但推荐）
 
-1. 安装 AI 依赖（包含 PyTorch）：
+1. 安装 AI 依赖（包含 PyTorch 与 rvc-hub 引擎）：
 
    ```bash
    uv sync --extra ai
    ```
 
-2. 拉取官方 RVC 推理代码（MIT 许可证，固定 commit，自动记录版本）：
-
-   ```bash
-   python scripts/fetch_rvc.py
-   ```
+2. 导入一个角色音色模型（见第 5 步），并在预设中使用 `engine: rvc-hub`
+   （参考 `examples/presets/ai-voice-rvc-hub.yaml`）。首次转换会从 HuggingFace
+   下载基础推理资产（hubert/rmvpe）；网络受限时设置
+   `HF_ENDPOINT=https://hf-mirror.com`。
 
 3. 再次启动 GUI，状态栏应显示 CUDA/CPU；若显示 CPU，说明当前环境未检测到可用
    CUDA，程序已自动回退。
 
-如果上游 RVC 需要独立的 Python 环境（Windows 上常见），改用客户端/服务端方式：
+进程内上游引擎 `engine: rvc` 仍是可选路径（需要 `python scripts/fetch_rvc.py`
+与兼容的 Python 工具链）。若上游 RVC 需要独立环境，可改用客户端/服务端方式：
 在有 RVC 环境的那台机器上运行 `vivoice serve`，本机使用
 `examples/presets/ai-voice-http.yaml` 预设并填好模型名与服务地址。协议见
 <https://github.com/VIvoice/VIvoice/blob/main/docs/RVC_SERVER_PROTOCOL.md>。
@@ -168,11 +168,14 @@ result in the status bar.
 
 ```bash
 uv sync --extra ai
-python scripts/fetch_rvc.py
 ```
 
-The second command vendors the official MIT-licensed RVC inference code at a
-pinned commit and records the commit hash. Restart the GUI afterwards.
+Import a character model (step 5) and use `engine: rvc-hub` in the preset (see
+`examples/presets/ai-voice-rvc-hub.yaml`). The first conversion downloads base
+inference assets (hubert/rmvpe) from HuggingFace; set
+`HF_ENDPOINT=https://hf-mirror.com` when the network requires it. The vendored
+in-process engine (`engine: rvc`) remains available via
+`python scripts/fetch_rvc.py`, which records the pinned commit.
 
 When upstream RVC needs its own Python environment (common on Windows), use the
 client/server mode instead: run `vivoice serve` on the machine that has the RVC

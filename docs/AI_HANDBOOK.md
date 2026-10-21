@@ -77,6 +77,15 @@ Two engines ship today:
   upstream RVC is sensitive to its Python/toolchain version, so a dedicated
   environment may be required.
 
+- **`rvc-hub` (recommended, verified).** Uses the MIT-licensed
+  `huggingface-hub-rvc` pipeline; loads the same community `.pth`/`.index`
+  models without fairseq/av. Real CPU inference is verified end-to-end in this
+  repository (`vivoice process` with an imported character model). It needs
+  the `ai` extra and downloads base assets (hubert/rmvpe) from
+  `lj1995/VoiceConversionWebUI` on first use. The adapter swaps
+  `torchaudio.load/save` for a soundfile implementation so shared FFmpeg
+  libraries are not required.
+
 - **`rvc-http` (client/server).** Talks the protocol in
   [RVC_SERVER_PROTOCOL.md](RVC_SERVER_PROTOCOL.md) to `vivoice serve`
   (`src/vivoice/server.py`). The client is fully tested against a fake server
@@ -85,6 +94,13 @@ Two engines ship today:
   until then the server returns `501` with instructions.
 
 Do not change the pipeline contract to make an engine fit; change the adapter.
+
+### Network troubleshooting
+
+- HuggingFace blocked? Set `HF_ENDPOINT=https://hf-mirror.com`.
+- A proxy that intercepts TLS may break certificate verification. Export the
+  Windows root certificates to a PEM file and set `REQUESTS_CA_BUNDLE` and
+  `SSL_CERT_FILE` to it (the repository smoke test used this approach).
 
 ## 5. Plugin entry points
 

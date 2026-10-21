@@ -27,7 +27,7 @@ class VoiceConversionEffect(Effect):
         "timeout": 300.0,
     }
     param_constraints: ClassVar[Mapping[str, Mapping[str, Any]]] = {
-        "engine": {"enum": ["rvc", "rvc-http"]},
+        "engine": {"enum": ["rvc", "rvc-hub", "rvc-http"]},
         "device": {"enum": ["auto", "cpu", "cuda", "mps"]},
         "timeout": {"minimum": 1.0, "maximum": 3600.0},
     }

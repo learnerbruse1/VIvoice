@@ -37,8 +37,8 @@ similar sites.
 - Local voice-model manager (`vivoice model add/list/remove`) and HuggingFace downloads
   (`vivoice model pull <repo-id>`)
 - Automatic compute-device detection: CUDA → MPS → CPU, with `--device` override
-- AI voice conversion through in-process RVC or a local conversion server
-  (`vivoice serve`, `engine: rvc-http`)
+- AI voice conversion through the verified `rvc-hub` engine (loads community
+  RVC `.pth`/`.index` models) or a local conversion server (`vivoice serve`)
 - Third-party plugins via entry points and JSON parameter schemas
   (`vivoice schema`, `vivoice effects <type>`)
 - User settings (`vivoice config list|get|set`)
@@ -60,8 +60,8 @@ For the AI voice-conversion engine (optional, heavy):
 
 ```bash
 uv sync --extra ai
-python scripts/fetch_rvc.py            # vendors the official MIT-licensed RVC repo
 uv run vivoice model pull <hf-repo-id> # or: vivoice model add path/to/model.pth
+# then use the ai-voice-rvc-hub preset (engine: rvc-hub, model: <name>)
 ```
 
 ## Command-line tour

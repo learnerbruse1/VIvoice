@@ -4,6 +4,24 @@ All notable changes to VIvoice are documented in this file. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] - 2026-10-21
+
+### Added
+
+- `rvc-hub` engine backed by the MIT-licensed `huggingface-hub-rvc` pipeline:
+  loads classic RVC-WebUI `.pth`/`.index` character models without fairseq/av
+  and was verified end-to-end on CPU with a real character model (input/output
+  correlation dropped to 0.063 after conversion).
+- Soundfile-based `torchaudio.load/save` shim so shared FFmpeg libraries are
+  not required for decoding.
+- ADR-0004, `ai-voice-rvc-hub.yaml` preset, and HuggingFace/proxy-CA network
+  troubleshooting documentation.
+
+### Changed
+
+- The `ai` extra now declares the `rvc-hub` dependency set
+  (huggingface-hub-rvc, librosa, safetensors, transformers, torchaudio).
+
 ## [0.4.0] - 2026-10-20
 
 ### Added

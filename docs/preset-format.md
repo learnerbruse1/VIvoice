@@ -48,4 +48,5 @@ for now.
 
 See [`examples/presets/`](../examples/presets/) for ready-to-use presets:
 `robot.yaml`, `pitch-up.yaml`, `deep-voice.yaml`, `broadcast.yaml`,
-`phone.yaml`, and `ai-voice-http.yaml` (`engine: rvc-http`).
+`phone.yaml`, `ai-voice-rvc-hub.yaml` (`engine: rvc-hub`), and
+`ai-voice-http.yaml` (`engine: rvc-http`).

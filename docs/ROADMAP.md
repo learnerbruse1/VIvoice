@@ -8,8 +8,9 @@ Milestones are ordered by dependency, not by promise of delivery dates.
 | v0.2 | EQ / noise-gate / reverb effects, streaming contract and `vivoice stream` real-time preview, cooperative cancellation, registry robustness fixes | shipped |
 | v0.3 | Chunked bounded-memory rendering, streaming pitch shifter, entry-point plugins, param schemas, user config, end-to-end voice-conversion pipeline tests (fake adapter), AI handbook | shipped |
 | v0.4 | RVC dual path (in-process wiring + `rvc-http` client/server), GUI Live page, packaging configuration and release workflow | shipped |
-| v0.5 | Verify real RVC inference on a GPU-capable machine and wire `server.convert_audio`; model download UX; quality presets | planned |
-| v0.6 | Effect quality: higher-quality pitch/formant shifting; more engines behind the adapter | planned |
+| v0.5 | Real RVC inference through `rvc-hub` verified end-to-end on CPU; soundfile-based decode shim; network troubleshooting docs | shipped |
+| v0.6 | Verify CUDA acceleration on a GPU machine, wire `server.convert_audio`, model download UX, quality presets | planned |
+| v0.7 | Effect quality: higher-quality pitch/formant shifting; more engines behind the adapter | planned |
 | v1.0 | Full real-time streaming: pitch and AI conversion in the stream path, DSP chain <50 ms, VB-Cable routing guide | planned |
 | v1.1 | Reference-audio cloning (OpenVoice-style zero-shot) behind the adapter; more engines | planned |
 | v1.2 | Third-party effect/adapter plugins via Python entry points; installer packaging (PyInstaller/Nuitka) | planned |

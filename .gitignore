@@ -18,6 +18,7 @@ htmlcov/
 
 # Local runtime data
 .vivoice/
+.smoke/
 models/
 
 # Vendored third-party sources (fetched by scripts/fetch_rvc.py)

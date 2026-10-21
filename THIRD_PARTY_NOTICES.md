@@ -8,6 +8,7 @@ components and their licenses.
 | Component | License | Notes |
 | --------- | ------- | ----- |
 | [RVC-Project/Retrieval-based-Voice-Conversion-WebUI](https://github.com/RVC-Project/Retrieval-based-Voice-Conversion-WebUI) | MIT | Optional AI engine, fetched by `scripts/fetch_rvc.py` at a pinned commit into `third_party/RVC` (git-ignored). The commit hash is recorded in `third_party/RVC_COMMIT.txt`. |
+| [huggingface-hub-rvc](https://pypi.org/project/huggingface-hub-rvc/) | MIT | Primary local RVC inference engine (`rvc-hub`). Reimplements the RVC architecture and loads classic RVC-WebUI `.pth`/`.index` models; base assets are fetched from `lj1995/VoiceConversionWebUI`. |
 
 ## Python dependencies
 
@@ -21,6 +22,8 @@ components and their licenses.
 | huggingface-hub | Apache-2.0 |
 | sounddevice (optional, realtime) | MIT |
 | torch (optional, ai) | BSD-style |
+| torchaudio, torchcodec (optional, ai) | BSD-style |
+| huggingface-hub-rvc, librosa, safetensors, transformers (optional, ai) | MIT / Apache-2.0 |
 | pytest, ruff, mypy (dev) | MIT |
 
 ## Licensing notes

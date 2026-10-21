@@ -1,0 +1,10 @@
+name: ai-voice-rvc-hub
+description: AI voice conversion with the huggingface-hub-rvc engine (CPU/GPU).
+chain:
+  - type: voice-conversion
+    params:
+      engine: rvc-hub
+      model: your-character
+      device: auto
+      f0_method: rmvpe
+      index_rate: 0.75
