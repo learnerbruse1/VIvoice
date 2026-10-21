@@ -4,6 +4,14 @@ All notable changes to VIvoice are documented in this file. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [0.8.0] - 2026-10-21
+
+### Added
+
+- Verified CUDA acceleration on real hardware (NVIDIA RTX 4050): device
+  auto-detection selects the GPU and `rvc-hub` conversion completes correctly
+  on it. GPU setup instructions and offline-cache guidance documented.
+
 ## [0.7.0] - 2026-10-21
 
 ### Added

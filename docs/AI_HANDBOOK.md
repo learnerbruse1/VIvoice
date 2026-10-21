@@ -101,6 +101,24 @@ Do not change the pipeline contract to make an engine fit; change the adapter.
 - A proxy that intercepts TLS may break certificate verification. Export the
   Windows root certificates to a PEM file and set `REQUESTS_CA_BUNDLE` and
   `SSL_CERT_FILE` to it (the repository smoke test used this approach).
+- After the first conversion, base assets (hubert/rmvpe) are cached under the
+  HuggingFace cache; set `HF_HUB_OFFLINE=1` to skip the metadata refresh round
+  trips that slow proxies can add to every run.
+
+### CUDA acceleration
+
+`uv.lock` pins the CPU PyTorch wheels for reproducible CI. On a CUDA machine,
+install matching CUDA wheels explicitly:
+
+```bash
+uv pip install "torch==2.14.1+cu126" "torchaudio==2.11.0+cu126" \
+  --index-url https://download.pytorch.org/whl/cu126
+```
+
+Verified on an NVIDIA RTX 4050: `vivoice devices` reports CUDA and `rvc-hub`
+conversion runs on the GPU. The first GPU run compiles kernels and is slow;
+subsequent runs are faster. Feature extraction and index retrieval timing
+depend on the upstream pipeline.
 
 ## 5. Plugin entry points
 

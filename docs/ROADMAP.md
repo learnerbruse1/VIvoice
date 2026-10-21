@@ -11,7 +11,7 @@ Milestones are ordered by dependency, not by promise of delivery dates.
 | v0.5 | Real RVC inference through `rvc-hub` verified end-to-end on CPU; soundfile-based decode shim; network troubleshooting docs | shipped |
 | v0.6 | Targeted model downloads and a fully functional conversion server (`server.convert_audio` via rvc-hub) | shipped |
 | v0.7 | Formant-shift effect, `vivoice doctor` diagnostics, checkpoint format validation, GUI download status | shipped |
-| v0.8 | Verify CUDA acceleration on a GPU machine; build and verify an AI-enabled distribution bundle | planned |
+| v0.8 | CUDA acceleration verified on real hardware (RTX 4050); verified self-contained AI-enabled distribution bundle | shipped |
 | v0.9 | Effect quality: higher-quality pitch/formant shifting; more engines behind the adapter | planned |
 | v1.0 | Full real-time streaming: pitch and AI conversion in the stream path, DSP chain <50 ms, VB-Cable routing guide | planned |
 | v1.1 | Reference-audio cloning (OpenVoice-style zero-shot) behind the adapter; more engines | planned |

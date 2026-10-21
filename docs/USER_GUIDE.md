@@ -128,6 +128,12 @@ GUI 中的 “Live” 页提供同样的实时预览，可选择输入/输出设
 
 - **状态栏显示 CPU**：未检测到 CUDA。检查 NVIDIA 驱动
   （<https://www.nvidia.com/drivers/>）或使用 `vivoice devices` 查看详情。
+- **使用 NVIDIA GPU 加速**：默认安装是 CPU 版 PyTorch；在 CUDA 机器上执行
+  `uv pip install "torch==2.14.1+cu126" "torchaudio==2.11.0+cu126" --index-url
+  https://download.pytorch.org/whl/cu126`（版本随环境调整），首次 GPU 推理会
+  编译内核、较慢，之后提速。
+- **每次都重新检查资产下载**：首次转换后设置 `HF_HUB_OFFLINE=1` 可跳过
+  HuggingFace 元数据刷新。
 - **找不到 RVC 引擎**：先执行第 4 步的 `uv sync --extra ai` 和
   `python scripts/fetch_rvc.py`。
 - **模型下载失败**：检查网络能否访问 HuggingFace，必要时设置镜像环境变量
@@ -263,6 +269,12 @@ latency (reference implementations are around 150–200 ms end to end).
 
 - **Status bar says CPU**: no CUDA device was found. Check NVIDIA drivers
   (<https://www.nvidia.com/drivers/>) or run `vivoice devices`.
+- **Using an NVIDIA GPU**: the default install uses CPU PyTorch. On a CUDA
+  machine run `uv pip install "torch==2.14.1+cu126" "torchaudio==2.11.0+cu126"
+  --index-url https://download.pytorch.org/whl/cu126` (adjust versions). The
+  first GPU run compiles kernels and is slow; later runs are faster.
+- **Asset re-check on every run**: set `HF_HUB_OFFLINE=1` after the first
+  conversion to skip HuggingFace metadata refresh.
 - **RVC engine not found**: run step 4's `uv sync --extra ai` and
   `python scripts/fetch_rvc.py`.
 - **Model download fails**: check HuggingFace connectivity; set the

@@ -25,9 +25,10 @@ def test_process_with_preset(tmp_path, robot_preset, sine_440, capsys) -> None:
     assert "wrote" in capsys.readouterr().out
 
 
-def test_devices_prints_cpu_without_torch(capsys) -> None:
+def test_devices_reports_detected_device(capsys) -> None:
     assert main(["devices"]) == 0
-    assert "CPU" in capsys.readouterr().out
+    output = capsys.readouterr().out
+    assert "CPU" in output or "CUDA" in output
 
 
 def test_missing_preset_fails_cleanly(tmp_path, capsys) -> None:
