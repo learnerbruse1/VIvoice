@@ -58,14 +58,21 @@ class ModelPullWorker(QThread):
     finished_ok = Signal(str, str)
     failed = Signal(str)
 
-    def __init__(self, repo_id: str, name: str | None = None, parent=None) -> None:
+    def __init__(
+        self,
+        repo_id: str,
+        name: str | None = None,
+        path: str | None = None,
+        parent=None,
+    ) -> None:
         super().__init__(parent)
         self._repo_id = repo_id
         self._name = name
+        self._path = path
 
     def run(self) -> None:
         try:
-            model = pull_model(self._repo_id, name=self._name)
+            model = pull_model(self._repo_id, name=self._name, path=self._path)
         except VivoiceError as exc:
             self.failed.emit(str(exc))
         except Exception as exc:  # noqa: BLE001

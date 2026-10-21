@@ -18,8 +18,13 @@ from __future__ import annotations
 import argparse
 import io
 import json
+import shutil
+import tempfile
+import urllib.parse
 from collections.abc import Sequence
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from importlib.util import find_spec
+from pathlib import Path
 
 import numpy as np
 import soundfile as sf
@@ -28,8 +33,9 @@ ENGINE_NAME = "rvc"
 SAMPLE_RATE = 40_000
 MAX_BODY_BYTES = 128 * 1024 * 1024
 
-# Flip to True once ``convert_audio`` is wired to the vendored engine.
-CONVERTER_READY = False
+def converter_ready() -> bool:
+    """The conversion endpoint is usable when the rvc-hub engine is installed."""
+    return find_spec("huggingface_hub_rvc") is not None
 
 
 def convert_audio(
@@ -38,15 +44,49 @@ def convert_audio(
     index_path: str,
     device: str,
 ) -> np.ndarray:
-    """Convert one WAV payload to float32 mono audio at 40 kHz.
+    """Convert one WAV payload to float32 mono audio at 40 kHz."""
+    if not model_path or not Path(model_path).is_file():
+        raise RuntimeError(f"RVC model file not found: {model_path or '(missing)'}")
+    if index_path and not Path(index_path).is_file():
+        raise RuntimeError(f"RVC index file not found: {index_path}")
+    try:
+        from huggingface_hub_rvc import RVCPipeline
+    except ImportError as exc:
+        raise RuntimeError(
+            "huggingface-hub-rvc is not installed; run: uv sync --extra ai"
+        ) from exc
 
-    This is the single integration point for the vendored RVC engine; the
-    exact upstream calls are described in docs/AI_HANDBOOK.md section 4.
-    """
-    raise NotImplementedError(
-        "The RVC engine is not wired into this server yet; "
-        "see docs/AI_HANDBOOK.md section 4."
-    )
+    audio, sample_rate = sf.read(io.BytesIO(wav_bytes), dtype="float32", always_2d=False)
+    if audio.ndim == 2:
+        audio = audio.mean(axis=1)
+    with tempfile.TemporaryDirectory(prefix="vivoice-server-") as temporary:
+        root = Path(temporary)
+        input_path = root / "input.wav"
+        output_path = root / "output.wav"
+        sf.write(str(input_path), np.asarray(audio, dtype=np.float32), int(sample_rate))
+        model_directory = root / "model"
+        model_directory.mkdir()
+        shutil.copy2(model_path, model_directory / "model.pth")
+        if index_path:
+            shutil.copy2(index_path, model_directory / "model.index")
+
+        from vivoice.ai.rvc.hub import _soundfile_torchaudio_backend
+
+        with _soundfile_torchaudio_backend():
+            pipeline = RVCPipeline.from_pretrained(model_directory)
+            pipeline.convert_file(
+                input_path,
+                output_path,
+                audio_mode="vocal_only",
+                device=device,
+                f0_method="rmvpe",
+                retrieval_strength=0.75,
+                output_sample_rate=SAMPLE_RATE,
+            )
+        converted, _output_rate = sf.read(
+            str(output_path), dtype="float32", always_2d=False
+        )
+    return np.asarray(converted, dtype=np.float32).reshape(-1)
 
 
 class _Handler(BaseHTTPRequestHandler):
@@ -56,7 +96,7 @@ class _Handler(BaseHTTPRequestHandler):
         if self.path != "/health":
             self._json(404, {"error": "not found"})
             return
-        self._json(200, {"engine": ENGINE_NAME, "ready": CONVERTER_READY})
+        self._json(200, {"engine": ENGINE_NAME, "ready": converter_ready()})
 
     def do_POST(self) -> None:  # noqa: N802
         if self.path != "/convert":
@@ -73,13 +113,10 @@ class _Handler(BaseHTTPRequestHandler):
         try:
             converted = convert_audio(
                 body,
-                self.headers.get("X-Model-Path", ""),
-                self.headers.get("X-Index", ""),
+                urllib.parse.unquote(self.headers.get("X-Model-Path", "")),
+                urllib.parse.unquote(self.headers.get("X-Index", "")),
                 "cpu",
             )
-        except NotImplementedError as exc:
-            self._json(501, {"error": str(exc)})
-            return
         except Exception as exc:  # noqa: BLE001 - boundary reports JSON, never a crash
             self._json(500, {"error": f"conversion failed: {exc}"})
             return

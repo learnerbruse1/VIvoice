@@ -15,7 +15,8 @@ Response: `200 application/json`
 {"engine": "rvc", "ready": true}
 ```
 
-`ready` is `false` while the server's conversion function is not wired up.
+`ready` is `true` when the `rvc-hub` engine (`huggingface-hub-rvc`) is installed;
+otherwise conversion returns `500` with installation instructions.
 
 ### POST `/convert`
 
@@ -33,8 +34,8 @@ Errors: `4xx/5xx application/json` with `{"error": "human readable message"}`.
 
 ## Implementations
 
-- Reference server: `vivoice serve` (see `src/vivoice/server.py`); wire the
-  vendored engine into `convert_audio()` and set `CONVERTER_READY = True`.
+- Reference server: `vivoice serve` (see `src/vivoice/server.py`); conversion
+  runs through the `rvc-hub` engine and requires `uv sync --extra ai`.
 - Client: `src/vivoice/ai/rvc/http.py` (`engine: rvc-http`).
 
 The client maps HTTP errors to `ConversionError`, timeouts to a reachability

@@ -256,7 +256,13 @@ class ModelsPage(QWidget):
         )
         if not ok or not repo_id.strip():
             return
-        self._pull_worker = ModelPullWorker(repo_id.strip(), parent=self)
+        relative, relative_ok = QInputDialog.getText(
+            self,
+            "Download model",
+            "Repo-relative file path (empty = download the whole repository):",
+        )
+        path = relative.strip() if relative_ok and relative.strip() else None
+        self._pull_worker = ModelPullWorker(repo_id.strip(), path=path, parent=self)
         self._pull_worker.finished_ok.connect(self._on_pull_finished)
         self._pull_worker.failed.connect(self._on_pull_failed)
         self._pull_worker.start()

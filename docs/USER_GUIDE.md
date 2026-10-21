@@ -71,6 +71,13 @@ vivoice model add path/to/model.pth --name 我的角色 --index path/to/model.in
 vivoice model pull <仓库ID，例如 wok000/vcclient000>
 ```
 
+大型社区仓库包含很多模型时，用 `--path/--index` 只下载需要的文件：
+
+```bash
+vivoice model pull chaye741/RVC-Voice-Models \
+  --path "weights/卡通-懒羊羊.pth" --index "indices/卡通-懒羊羊.index"
+```
+
 模型存放于 `~/.vivoice/models/`。可在 GUI 的“模型”页查看、导入、删除。
 
 模型站点与搜索入口：
@@ -195,6 +202,13 @@ Download from HuggingFace:
 
 ```bash
 vivoice model pull <repo-id, e.g. wok000/vcclient000>
+```
+
+For large community repositories, download only the files you need:
+
+```bash
+vivoice model pull chaye741/RVC-Voice-Models \
+  --path "weights/卡通-懒羊羊.pth" --index "indices/卡通-懒羊羊.index"
 ```
 
 Models live under `~/.vivoice/models/` and are managed on the GUI "Models" page.

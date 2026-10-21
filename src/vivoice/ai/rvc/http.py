@@ -11,6 +11,7 @@ from __future__ import annotations
 import io
 import json
 import urllib.error
+import urllib.parse
 import urllib.request
 from collections.abc import Mapping
 from typing import Any, ClassVar
@@ -48,9 +49,15 @@ class RvcHttpAdapter(VoiceConversionAdapter):
             method="POST",
             headers={
                 "Content-Type": "audio/wav",
-                "X-Voice-Model": voice_model.name,
-                "X-Model-Path": str(voice_model.checkpoint),
-                "X-Index": str(voice_model.index) if voice_model.index else "",
+                "X-Voice-Model": urllib.parse.quote(voice_model.name),
+                "X-Model-Path": urllib.parse.quote(
+                    str(voice_model.checkpoint), safe="/\\:"
+                ),
+                "X-Index": urllib.parse.quote(
+                    str(voice_model.index), safe="/\\:"
+                )
+                if voice_model.index
+                else "",
             },
         )
         try:

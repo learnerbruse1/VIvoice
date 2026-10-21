@@ -100,6 +100,10 @@ def build_parser() -> argparse.ArgumentParser:
     model_pull.add_argument("repo_id", help="owner/repository identifier")
     model_pull.add_argument("--name", help="local display name")
     model_pull.add_argument("--revision", help="branch, tag, or commit")
+    model_pull.add_argument(
+        "--path", help="download one repo-relative file instead of the whole repository"
+    )
+    model_pull.add_argument("--index", help="repo-relative .index file (with --path)")
     model_pull.set_defaults(handler=_cmd_model_pull)
 
     guide = subparsers.add_parser("guide", help="show the user guide location")
@@ -294,7 +298,13 @@ def _cmd_model_remove(args: argparse.Namespace) -> int:
 
 
 def _cmd_model_pull(args: argparse.Namespace) -> int:
-    model = pull_model(args.repo_id, name=args.name, revision=args.revision)
+    model = pull_model(
+        args.repo_id,
+        name=args.name,
+        revision=args.revision,
+        path=args.path,
+        index_path=args.index,
+    )
     print(f"downloaded voice model '{model.name}' from {model.source}")
     return 0
 

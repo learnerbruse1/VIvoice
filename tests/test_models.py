@@ -70,3 +70,30 @@ def test_pull_model_registers_checkpoint(tmp_path, monkeypatch) -> None:
 def test_pull_model_requires_owner_repo(tmp_path) -> None:
     with pytest.raises(ModelError, match="owner/repository"):
         pull_model("not-a-repo-id", root=tmp_path)
+
+
+def test_pull_model_targeted_file(tmp_path, monkeypatch) -> None:
+    def fake_hub_download(
+        repo_id: str, filename: str, local_dir: str, revision: str | None
+    ) -> str:
+        target = Path(local_dir) / filename
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(b"checkpoint" if filename.endswith(".pth") else b"index")
+        return str(target)
+
+    monkeypatch.setattr("vivoice.models.hub._hub_download", fake_hub_download)
+    model = pull_model(
+        "owner/repository",
+        root=tmp_path,
+        path="weights/alice.pth",
+        index_path="indices/alice.index",
+    )
+    assert model.name == "repository"
+    assert model.checkpoint.is_file()
+    assert model.index is not None and model.index.is_file()
+    assert model.source == "huggingface:owner/repository"
+
+
+def test_pull_model_rejects_empty_path(tmp_path) -> None:
+    with pytest.raises(ModelError, match="repo-relative"):
+        pull_model("owner/repository", root=tmp_path, path="   ")

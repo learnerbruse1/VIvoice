@@ -4,6 +4,25 @@ All notable changes to VIvoice are documented in this file. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [0.6.0] - 2026-10-21
+
+### Added
+
+- Targeted voice-model downloads: `vivoice model pull <repo-id> --path
+  weights/alice.pth --index indices/alice.index` downloads only the requested
+  files from large community repositories instead of the whole repository.
+- The reference conversion server (`vivoice serve`) now performs real
+  conversion through the `rvc-hub` engine; `/health` reports readiness
+  dynamically based on whether the engine is installed.
+
+### Fixed
+
+- The GUI model download dialog now supports a repo-relative path and passes it
+  through to the targeted download path.
+- HTTP headers now percent-encode non-ASCII model names and paths (the server
+  decodes them), fixing client/server conversion for Chinese-named models.
+- The `ai` extra now includes `faiss-cpu` so `.index` retrieval works.
+
 ## [0.5.0] - 2026-10-21
 
 ### Added

@@ -89,9 +89,9 @@ Two engines ship today:
 - **`rvc-http` (client/server).** Talks the protocol in
   [RVC_SERVER_PROTOCOL.md](RVC_SERVER_PROTOCOL.md) to `vivoice serve`
   (`src/vivoice/server.py`). The client is fully tested against a fake server
-  (`tests/test_rvc_http.py`). To finish the server on a capable machine, wire
-  the vendored engine into `convert_audio()` and set `CONVERTER_READY = True`;
-  until then the server returns `501` with instructions.
+  (`tests/test_rvc_http.py`). The server performs real conversion through the
+  `rvc-hub` engine (`convert_audio` in `src/vivoice/server.py`) and reports
+  readiness dynamically on `/health`; it needs `uv sync --extra ai`.
 
 Do not change the pipeline contract to make an engine fit; change the adapter.
 
