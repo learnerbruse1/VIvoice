@@ -22,5 +22,5 @@ def test_main_window_constructs(tmp_path, monkeypatch, qapp) -> None:
 
     window = MainWindow()
     assert window.windowTitle() == "VIvoice"
-    assert window.stack.count() == 4
+    assert window.stack.count() == 5
     window.close()

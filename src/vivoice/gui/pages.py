@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QPlainTextEdit,
     QProgressBar,
     QPushButton,
+    QSpinBox,
     QVBoxLayout,
     QWidget,
 )
@@ -26,7 +27,7 @@ from PySide6.QtWidgets import (
 from vivoice.ai.device import describe_device
 from vivoice.config import load_user_config
 from vivoice.core.errors import VivoiceError
-from vivoice.gui.workers import ConversionWorker, ModelAddWorker, ModelPullWorker
+from vivoice.gui.workers import ConversionWorker, ModelAddWorker, ModelPullWorker, StreamWorker
 from vivoice.models import ModelRegistry
 from vivoice.paths import shipped_presets_dir, user_presets_dir
 from vivoice.presets import Preset
@@ -41,6 +42,24 @@ def collect_presets() -> list[Path]:
     if user.is_dir():
         paths.extend(sorted(user.glob("*.yaml")))
     return paths
+
+
+def _audio_devices(kind: str) -> list[tuple[str, object]]:
+    """Return ``(description, device_index_or_None)`` pairs for a device kind."""
+    try:
+        import sounddevice as sd
+    except ImportError:
+        return [("Default", None)]
+    try:
+        devices = sd.query_devices()
+    except Exception:
+        return [("Default", None)]
+    attribute = "max_input_channels" if kind == "input" else "max_output_channels"
+    results: list[tuple[str, object]] = []
+    for index, device in enumerate(devices):
+        if getattr(device, attribute, 0) and int(getattr(device, attribute)) > 0:
+            results.append((str(device.name), index))
+    return results or [("Default", None)]
 
 
 class ConvertPage(QWidget):
@@ -321,6 +340,103 @@ class PresetsPage(QWidget):
             QMessageBox.critical(self, "Save failed", str(exc))
             return
         self.refresh()
+
+
+class StreamPage(QWidget):
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self._worker: StreamWorker | None = None
+
+        form = QFormLayout()
+        self.preset_combo = QComboBox(self)
+        self.input_combo = QComboBox(self)
+        self.output_combo = QComboBox(self)
+        self.rate_combo = QComboBox(self)
+        self.rate_combo.addItems(["48000", "44100"])
+        self.block_spin = QSpinBox(self)
+        self.block_spin.setRange(0, 8192)
+        self.block_spin.setSingleStep(64)
+        self.block_spin.setSpecialValueText("Auto")
+        self.block_spin.setValue(0)
+        form.addRow("Preset", self.preset_combo)
+        form.addRow("Input device", self.input_combo)
+        form.addRow("Output device", self.output_combo)
+        form.addRow("Sample rate", self.rate_combo)
+        form.addRow("Block size", self.block_spin)
+
+        layout = QVBoxLayout(self)
+        layout.addLayout(form)
+
+        buttons = QHBoxLayout()
+        self.start_button = QPushButton("Start", self)
+        self.start_button.clicked.connect(self._start)
+        self.stop_button = QPushButton("Stop", self)
+        self.stop_button.clicked.connect(self._stop)
+        self.stop_button.setEnabled(False)
+        buttons.addWidget(self.start_button)
+        buttons.addWidget(self.stop_button)
+        layout.addLayout(buttons)
+
+        self.status_label = QLabel("Ready. Use streaming-capable presets.", self)
+        self.status_label.setWordWrap(True)
+        layout.addWidget(self.status_label)
+        layout.addStretch(1)
+        self.refresh()
+
+    def refresh(self) -> None:
+        self.preset_combo.clear()
+        for path in collect_presets():
+            self.preset_combo.addItem(path.stem, str(path))
+        self.input_combo.clear()
+        for description, device in _audio_devices("input"):
+            self.input_combo.addItem(description, device)
+        self.output_combo.clear()
+        for description, device in _audio_devices("output"):
+            self.output_combo.addItem(description, device)
+
+    def _start(self) -> None:
+        preset_path = self.preset_combo.currentData()
+        if not preset_path:
+            QMessageBox.warning(self, "VIvoice", "Choose a preset first.")
+            return
+        try:
+            preset = Preset.load(preset_path)
+        except VivoiceError as exc:
+            QMessageBox.warning(self, "VIvoice", str(exc))
+            return
+        self._worker = StreamWorker(
+            preset,
+            int(self.rate_combo.currentText()),
+            int(self.block_spin.value()),
+            self.input_combo.currentData(),
+            self.output_combo.currentData(),
+            parent=self,
+        )
+        self._worker.started_ok.connect(self._on_started)
+        self._worker.stopped.connect(self._on_stopped)
+        self._worker.failed.connect(self._on_failed)
+        self.start_button.setEnabled(False)
+        self.stop_button.setEnabled(True)
+        self.status_label.setText("Starting…")
+        self._worker.start()
+
+    def _stop(self) -> None:
+        if self._worker is not None:
+            self._worker.cancel()
+
+    def _on_started(self) -> None:
+        self.status_label.setText("Streaming; press Stop to end.")
+
+    def _on_stopped(self) -> None:
+        self.status_label.setText("Stopped.")
+        self.start_button.setEnabled(True)
+        self.stop_button.setEnabled(False)
+
+    def _on_failed(self, message: str) -> None:
+        self.status_label.setText("Failed.")
+        self.start_button.setEnabled(True)
+        self.stop_button.setEnabled(False)
+        QMessageBox.critical(self, "Streaming failed", message)
 
 
 def _with_button(parent: QWidget, edit: QLineEdit, button: QPushButton) -> QWidget:

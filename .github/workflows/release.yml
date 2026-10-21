@@ -1,0 +1,37 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            script: scripts/build_pyinstaller.ps1
+            shell: pwsh
+          - os: ubuntu-latest
+            script: scripts/build_pyinstaller.sh
+            shell: bash
+          - os: macos-latest
+            script: scripts/build_pyinstaller.sh
+            shell: bash
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - name: Build
+        shell: ${{ matrix.shell }}
+        run: ${{ matrix.script }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vivoice-${{ runner.os }}
+          path: dist/*

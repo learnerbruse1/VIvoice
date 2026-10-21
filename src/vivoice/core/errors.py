@@ -51,3 +51,7 @@ class AudioIOError(VivoiceError):
 
 class ConfigError(VivoiceError):
     """A user configuration value is invalid."""
+
+
+class ConversionError(VivoiceError):
+    """A voice-conversion engine reported a failure."""

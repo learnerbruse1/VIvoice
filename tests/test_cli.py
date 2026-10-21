@@ -52,3 +52,23 @@ def test_model_add_and_list(tmp_path, monkeypatch, capsys) -> None:
     assert main(["model", "add", str(checkpoint), "--name", "alice"]) == 0
     assert main(["model", "list"]) == 0
     assert "alice" in capsys.readouterr().out
+
+
+def test_effects_detail_prints_schema(capsys) -> None:
+    assert main(["effects", "gain"]) == 0
+    assert '"type": "gain"' in capsys.readouterr().out
+
+
+def test_schema_exports_all_effects(capsys) -> None:
+    assert main(["schema"]) == 0
+    output = capsys.readouterr().out
+    assert '"voice-conversion"' in output
+    assert '"pitch"' in output
+
+
+def test_config_commands_roundtrip(tmp_path, monkeypatch, capsys) -> None:
+    monkeypatch.setenv("VIVOICE_HOME", str(tmp_path))
+    assert main(["config", "list"]) == 0
+    assert main(["config", "set", "sample_rate", "44100"]) == 0
+    assert main(["config", "get", "sample_rate"]) == 0
+    assert "44100" in capsys.readouterr().out

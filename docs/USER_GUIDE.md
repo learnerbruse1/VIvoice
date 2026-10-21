@@ -52,6 +52,11 @@ uv run vivoice-gui
 3. 再次启动 GUI，状态栏应显示 CUDA/CPU；若显示 CPU，说明当前环境未检测到可用
    CUDA，程序已自动回退。
 
+如果上游 RVC 需要独立的 Python 环境（Windows 上常见），改用客户端/服务端方式：
+在有 RVC 环境的那台机器上运行 `vivoice serve`，本机使用
+`examples/presets/ai-voice-http.yaml` 预设并填好模型名与服务地址。协议见
+<https://github.com/VIvoice/VIvoice/blob/main/docs/RVC_SERVER_PROTOCOL.md>。
+
 ### 第 5 步：导入音色模型（两种方式）
 
 方式 A——本地导入（.pth + 可选 .index）：
@@ -103,6 +108,7 @@ vivoice stream --preset examples/presets/broadcast.yaml
 vivoice stream --list-devices
 ```
 
+GUI 中的 “Live” 页提供同样的实时预览，可选择输入/输出设备、采样率与块大小。
 按 `Ctrl+C` 停止。音高偏移与 AI 音色转换目前只支持离线处理；完整实时流
 （含这两类效果）属于 v1 里程碑（见 [ROADMAP.md](ROADMAP.md)）。Windows 上实现
 “麦克风 → 处理 → 其他应用”需要虚拟声卡：
@@ -168,6 +174,12 @@ python scripts/fetch_rvc.py
 The second command vendors the official MIT-licensed RVC inference code at a
 pinned commit and records the commit hash. Restart the GUI afterwards.
 
+When upstream RVC needs its own Python environment (common on Windows), use the
+client/server mode instead: run `vivoice serve` on the machine that has the RVC
+environment, then use `examples/presets/ai-voice-http.yaml` with your model name
+and server address. See
+<https://github.com/VIvoice/VIvoice/blob/main/docs/RVC_SERVER_PROTOCOL.md>.
+
 ### Step 5: import a voice model
 
 Local import:
@@ -218,6 +230,8 @@ vivoice stream --preset examples/presets/broadcast.yaml
 vivoice stream --list-devices
 ```
 
+The GUI "Live" page offers the same real-time preview with device, sample-rate,
+and block-size selectors.
 Press `Ctrl+C` to stop. Pitch shift and AI voice conversion are offline-only for
 now; the full real-time path (including those effects) is planned for v1 (see
 [ROADMAP.md](ROADMAP.md)). On Windows, microphone → processing → other apps

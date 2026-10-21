@@ -29,6 +29,12 @@ The validated YAML file of per-user preferences (devices, sample rate, log
 level) under the user's VIvoice data directory.
 _Avoid_: settings file, preferences
 
+**Conversion Server**:
+A local HTTP service that runs a voice-conversion engine and speaks the
+documented WAV-in/WAV-out protocol, so the heavy engine can live in its own
+environment.
+_Avoid_: remote API, inference backend
+
 **Preset**:
 A saved YAML document that names a Chain and the parameter values for every Effect in it.
 _Avoid_: profile, configuration, patch

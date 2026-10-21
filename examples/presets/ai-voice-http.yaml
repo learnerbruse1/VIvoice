@@ -1,0 +1,9 @@
+name: ai-voice-http
+description: AI voice conversion through a local RVC server (vivoice serve).
+chain:
+  - type: voice-conversion
+    params:
+      engine: rvc-http
+      model: your-character
+      endpoint: http://127.0.0.1:7865
+      timeout: 300

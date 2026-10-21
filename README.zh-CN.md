@@ -32,6 +32,7 @@ VIvoice 是一个「离线优先、可扩展」的变声器。它把确定性 DS
 - 分块渲染：内存有界、平滑进度、可随时取消
 - 本地音色模型管理（`vivoice model add/list/remove`）与 HuggingFace 下载（`vivoice model pull <repo-id>`）
 - 计算设备自动检测：CUDA → MPS → CPU，并支持 `--device` 覆盖
+- AI 音色转换：进程内 RVC 或本地转换服务（`vivoice serve`、`engine: rvc-http`）
 - 入口点插件系统与 JSON 参数 Schema（`vivoice schema`、`vivoice effects <类型>`）
 - 用户设置（`vivoice config list|get|set`）
 - 中英双语 README，应用内置详细使用指南（带步骤与链接）
@@ -68,6 +69,7 @@ vivoice model list
 vivoice model pull wok000/vcclient000
 vivoice gui                        # 启动桌面应用
 vivoice stream --preset examples/presets/broadcast.yaml
+vivoice serve --port 7865          # 以 HTTP 暴露 RVC 转换服务
 vivoice config set sample_rate 44100
 ```
 

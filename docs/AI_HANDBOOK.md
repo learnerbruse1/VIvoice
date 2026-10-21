@@ -65,18 +65,24 @@ mono downmix, resampling, and channel restore; the adapter never sees
 
 ### RVC status (important)
 
-The RVC adapter's boundary, setup checks, device plumbing, and the full
-downmix→resample→convert→restore pipeline are implemented and tested with a
-fake adapter (`tests/test_voice_conversion.py`). Actual inference is
-**not wired yet** because it needs PyTorch, a vendored engine, and ideally a
-GPU to verify. To finish it on a capable machine:
+Two engines ship today:
 
-1. `uv sync --extra ai` and `python scripts/fetch_rvc.py` (records the pinned
-   commit in `third_party/RVC_COMMIT.txt`).
-2. Implement `RVCAdapter.convert` by calling the vendored repo's inference
-   modules; keep the helper errors and `sample_rate = 40_000`.
-3. Verify offline on CPU first, then CUDA via the existing auto-detection.
-4. Keep the fake-adapter test green; it pins the pipeline contract.
+- **`rvc` (in-process).** Setup checks, device plumbing, lazy upstream
+  imports, `VC.get_vc`/`vc_single` wiring, and the full
+  downmix→resample→convert→restore pipeline are implemented. The wiring is
+  unit-tested with a fake engine (`tests/test_rvc_adapter.py`) and the
+  pipeline contract is pinned by `tests/test_voice_conversion.py`. Real
+  inference needs PyTorch and the vendored repo: `uv sync --extra ai` then
+  `python scripts/fetch_rvc.py`. Verify offline on CPU first, then CUDA;
+  upstream RVC is sensitive to its Python/toolchain version, so a dedicated
+  environment may be required.
+
+- **`rvc-http` (client/server).** Talks the protocol in
+  [RVC_SERVER_PROTOCOL.md](RVC_SERVER_PROTOCOL.md) to `vivoice serve`
+  (`src/vivoice/server.py`). The client is fully tested against a fake server
+  (`tests/test_rvc_http.py`). To finish the server on a capable machine, wire
+  the vendored engine into `convert_audio()` and set `CONVERTER_READY = True`;
+  until then the server returns `501` with instructions.
 
 Do not change the pipeline contract to make an engine fit; change the adapter.
 

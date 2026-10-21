@@ -4,6 +4,28 @@ All notable changes to VIvoice are documented in this file. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] - 2026-10-20
+
+### Added
+
+- In-process RVC adapter wiring (`VC.get_vc` / `vc_single`) with lazy upstream
+  imports, device mapping, and error normalization; logic verified with a fake
+  engine.
+- `rvc-http` adapter and a reference conversion server (`vivoice serve`,
+  `scripts/rvc_server.py`) implementing the documented WAV-in/WAV-out protocol
+  ([docs/RVC_SERVER_PROTOCOL.md](docs/RVC_SERVER_PROTOCOL.md)); client tested
+  against a fake server and server endpoints tested directly.
+- GUI "Live" page for real-time preview with device, sample-rate, and
+  block-size selectors.
+- Packaging: PyInstaller build scripts, launch entry points, and a
+  tag-triggered release workflow ([docs/PACKAGING.md](docs/PACKAGING.md)).
+- `ai-voice-http.yaml` example preset and the `ConversionError` error class.
+
+### Fixed
+
+- Restored `PresetsPage` methods that a misordered class insertion had
+  shadowed (caught by the GUI smoke test during loop-back).
+
 ## [0.3.0] - 2026-10-20
 
 ### Added

@@ -10,6 +10,7 @@ flowchart TD
     Engine["Audio core: Chain + Effects"] --> Effects["Built-in effects"]
     Engine --> Adapter["VoiceConversionAdapter"]
     Adapter --> RVC["RVC engine (optional, vendored)"]
+    Adapter --> RVC_HTTP["RVC over HTTP (vivoice serve)"]
     Engine --> Presets["Presets (YAML)"]
     Engine --> Audio["Audio I/O (soundfile, 48 kHz float32)"]
     RVC --> Models["Voice models (.pth / .index)"]
@@ -34,6 +35,8 @@ flowchart TD
 | `src/vivoice/presets/` | YAML preset loading, validation, and saving |
 | `src/vivoice/models/` | Local voice-model registry and HuggingFace downloads |
 | `src/vivoice/ai/` | Compute-device resolver and the `VoiceConversionAdapter` boundary |
+| `src/vivoice/ai/rvc/http.py` | `rvc-http` adapter speaking the server protocol |
+| `src/vivoice/server.py` | Reference conversion server (`vivoice serve`) |
 | `src/vivoice/gui/` | PySide6 application (thin front-end, no DSP logic) |
 | `src/vivoice/cli.py` | Headless command-line front-end |
 | `src/vivoice/plugins.py` | Third-party effects/adapters via entry points |
@@ -65,7 +68,10 @@ class VoiceConversionAdapter(ABC):
 The `voice-conversion` effect downmixes to mono, resamples to the engine's
 native rate (RVC runs at 40 kHz), delegates to the adapter, then resamples back
 and restores the channel layout. This keeps engine-specific sample rates out of
-the 48 kHz core.
+the 48 kHz core. Two RVC engines implement the boundary: `rvc` (in-process,
+vendored upstream) and `rvc-http` (client/server per
+[RVC_SERVER_PROTOCOL.md](RVC_SERVER_PROTOCOL.md)); third parties add more via
+entry points.
 
 ### Device resolution
 

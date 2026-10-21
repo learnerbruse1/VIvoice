@@ -37,6 +37,8 @@ similar sites.
 - Local voice-model manager (`vivoice model add/list/remove`) and HuggingFace downloads
   (`vivoice model pull <repo-id>`)
 - Automatic compute-device detection: CUDA → MPS → CPU, with `--device` override
+- AI voice conversion through in-process RVC or a local conversion server
+  (`vivoice serve`, `engine: rvc-http`)
 - Third-party plugins via entry points and JSON parameter schemas
   (`vivoice schema`, `vivoice effects <type>`)
 - User settings (`vivoice config list|get|set`)
@@ -74,6 +76,7 @@ vivoice model list
 vivoice model pull wok000/vcclient000
 vivoice gui                        # launch the desktop app
 vivoice stream --preset examples/presets/broadcast.yaml
+vivoice serve --port 7865           # expose RVC conversion over HTTP
 vivoice config set sample_rate 44100
 ```
 

@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
 from vivoice.ai.device import describe_device
 from vivoice.config import load_user_config
 from vivoice.gui.guide import GuidePage
-from vivoice.gui.pages import ConvertPage, ModelsPage, PresetsPage
+from vivoice.gui.pages import ConvertPage, ModelsPage, PresetsPage, StreamPage
 from vivoice.models import ModelRegistry
 
 
@@ -36,6 +36,7 @@ class MainWindow(QMainWindow):
             "Convert": ConvertPage(central),
             "Models": ModelsPage(central),
             "Presets": PresetsPage(central),
+            "Live": StreamPage(central),
             "User guide": GuidePage(central),
         }
         for page in self.pages.values():

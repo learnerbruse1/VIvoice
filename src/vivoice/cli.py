@@ -105,6 +105,11 @@ def build_parser() -> argparse.ArgumentParser:
     guide = subparsers.add_parser("guide", help="show the user guide location")
     guide.set_defaults(handler=_cmd_guide)
 
+    serve = subparsers.add_parser("serve", help="run the voice-conversion HTTP server")
+    serve.add_argument("--host", default="127.0.0.1")
+    serve.add_argument("--port", type=int, default=7865)
+    serve.set_defaults(handler=_cmd_serve)
+
     gui = subparsers.add_parser("gui", help="launch the desktop application")
     gui.set_defaults(handler=_cmd_gui)
 
@@ -301,6 +306,12 @@ def _cmd_guide(args: argparse.Namespace) -> int:
     else:
         print(f"user guide: {path}")
     return 0
+
+
+def _cmd_serve(args: argparse.Namespace) -> int:
+    from vivoice.server import main as serve_main
+
+    return serve_main(["--host", args.host, "--port", str(args.port)])
 
 
 def _cmd_gui(args: argparse.Namespace) -> int:
