@@ -28,3 +28,20 @@ jobs:
       - run: uv run ruff check .
       - run: uv run mypy src
       - run: uv run pytest --cov=vivoice --cov-report=term-missing --cov-fail-under=65
+
+  ai-smoke:
+    name: AI path / Python 3.12
+    runs-on: ubuntu-latest
+    env:
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - run: uv sync --extra ai --extra dev --extra realtime
+      - run: >-
+          uv run pytest
+          tests/test_rvc_hub.py tests/test_rvc_http.py tests/test_rvc_adapter.py
+          tests/test_voice_conversion.py tests/test_device.py tests/test_server.py
+      - run: uv run vivoice doctor

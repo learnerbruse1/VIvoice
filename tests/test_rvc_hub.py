@@ -18,6 +18,8 @@ def _install_fake_pipeline(module: types.ModuleType) -> dict:
         last_instance: FakeRVCPipeline | None = None
 
         def __init__(self) -> None:
+            self.had_model = False
+            self.had_index = False
             FakeRVCPipeline.last_instance = self
 
         @classmethod
@@ -25,6 +27,8 @@ def _install_fake_pipeline(module: types.ModuleType) -> dict:
             instance = cls()
             instance.directory = directory
             instance.kwargs = kwargs
+            instance.had_model = (Path(directory) / "model.pth").is_file()
+            instance.had_index = (Path(directory) / "model.index").is_file()
             return instance
 
         def convert_file(self, source: Path, output: Path, **kwargs) -> None:
@@ -46,7 +50,13 @@ def test_rvc_hub_adapter_wiring(tmp_path, monkeypatch) -> None:
     monkeypatch.setitem(sys.modules, "huggingface_hub_rvc", module)
     _install_fake_pipeline(module)
     directory = tmp_path / "alice"
-    model = VoiceModel("alice", directory, directory / "model.pth", None, "test")
+    checkpoint = directory / "weights" / "alice.pth"
+    index = directory / "indices" / "alice.index"
+    checkpoint.parent.mkdir(parents=True)
+    index.parent.mkdir(parents=True)
+    checkpoint.write_bytes(b"checkpoint")
+    index.write_bytes(b"index")
+    model = VoiceModel("alice", directory, checkpoint, index, "test")
 
     adapter = RvcHubAdapter(Device.CPU)
     output = adapter.convert(
@@ -57,6 +67,8 @@ def test_rvc_hub_adapter_wiring(tmp_path, monkeypatch) -> None:
     assert output.shape == (4_000,)
     pipeline = module.RVCPipeline.last_instance
     assert pipeline is not None
+    assert pipeline.had_model
+    assert pipeline.had_index
     assert pipeline.kwargs["device"] == "cpu"
     assert pipeline.kwargs["audio_mode"] == "vocal_only"
     assert pipeline.kwargs["f0_method"] == "crepe"

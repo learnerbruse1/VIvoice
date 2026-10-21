@@ -8,6 +8,7 @@ community voice-model ecosystem.
 
 from __future__ import annotations
 
+import shutil
 import tempfile
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
@@ -41,21 +42,31 @@ class RvcHubAdapter(VoiceConversionAdapter):
         try:
             from huggingface_hub_rvc import RVCPipeline
         except ImportError as exc:
+            cause = exc.__cause__ or exc.__context__
             raise MissingDependencyError(
                 "huggingface-hub-rvc is required for the 'rvc-hub' engine. "
-                "Install it with: uv pip install huggingface-hub-rvc"
+                f"Install it with: uv pip install huggingface-hub-rvc "
+                f"({exc}"
+                + (f"; caused by: {cause}" if cause is not None else "")
+                + ")"
             ) from exc
 
         device = "cuda" if self.device == Device.CUDA else "cpu"
         f0_method = str(params.get("f0_method", "rmvpe"))
         retrieval_strength = float(params.get("index_rate", 0.75))
         with tempfile.TemporaryDirectory(prefix="vivoice-rvc-") as temporary:
-            source = Path(temporary) / "input.wav"
-            output = Path(temporary) / "output.wav"
+            root = Path(temporary)
+            source = root / "input.wav"
+            output = root / "output.wav"
+            model_directory = root / "model"
+            model_directory.mkdir()
+            shutil.copy2(voice_model.checkpoint, model_directory / "model.pth")
+            if voice_model.index:
+                shutil.copy2(voice_model.index, model_directory / "model.index")
             sf.write(str(source), audio_mono, self.sample_rate)
             try:
                 with _soundfile_torchaudio_backend():
-                    pipeline = RVCPipeline.from_pretrained(voice_model.directory)
+                    pipeline = RVCPipeline.from_pretrained(model_directory)
                     pipeline.convert_file(
                         source,
                         output,

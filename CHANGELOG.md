@@ -18,6 +18,11 @@ All notable changes to VIvoice are documented in this file. The format follows
 
 - Local model imports now reject non-`.pth`/`.safetensors` checkpoints with a
   clear error instead of registering unusable files.
+- The `ai` extra now includes `torchcodec` (required by upstream transformers
+  import paths), and the rvc-hub adapter copies nested model files into a
+  normalized directory before inference.
+- Verified a self-contained `vivoice-ai` executable performs real AI voice
+  conversion; build scripts added (`scripts/build_pyinstaller_ai.*`).
 
 ## [0.6.0] - 2026-10-21
 
