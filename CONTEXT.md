@@ -10,6 +10,11 @@ A voice changer framework: deterministic DSP effects plus pluggable AI voice con
 A deterministic DSP transformation applied to an audio stream, such as pitch shift, formant shift, or reverb.
 _Avoid_: audio filter, DSP module
 
+**Formant**:
+A resonance band of the vocal tract that shapes voice character; the formant
+effect shifts these bands without changing pitch.
+_Avoid_: timbre filter, spectral peak
+
 **Chain**:
 The ordered sequence of Effects that processes one stream of audio.
 _Avoid_: pipeline, effect stack, audio graph

@@ -26,7 +26,7 @@ VIvoice 是一个「离线优先、可扩展」的变声器。它把确定性 DS
 - 无头引擎 + PySide6 桌面 GUI + `vivoice` 命令行
 - 48 kHz float32 处理，DSP 支持多声道
 - 内置效果：增益、音高偏移（相位声码器）、机器人（环形调制）、回声、三段 EQ、
-  噪声门、混响
+  噪声门、混响、共振峰偏移
 - YAML 预设与效果注册表（`vivoice effects`）
 - 实时预览（`vivoice stream`）支持实时音高偏移；离线渲染仍使用更高音质的相位声码器
 - 分块渲染：内存有界、平滑进度、可随时取消
@@ -65,6 +65,7 @@ vivoice process input.wav output.wav --preset examples/presets/robot.yaml
 vivoice effects                    # 列出已注册效果
 vivoice schema                     # 导出 JSON Schema 供工具使用
 vivoice devices                    # 显示检测到的计算设备
+vivoice doctor                     # 诊断环境与依赖
 vivoice model add voice.pth --name alice --index voice.index
 vivoice model list
 vivoice model pull wok000/vcclient000

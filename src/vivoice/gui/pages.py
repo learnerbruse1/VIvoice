@@ -208,6 +208,8 @@ class ModelsPage(QWidget):
         layout = QVBoxLayout(self)
         layout.addWidget(QLabel("Voice models (use with the 'voice-conversion' effect):", self))
         layout.addWidget(self.list_widget)
+        self.status_label = QLabel("", self)
+        layout.addWidget(self.status_label)
 
         buttons = QHBoxLayout()
         add_button = QPushButton("Add local…", self)
@@ -265,6 +267,7 @@ class ModelsPage(QWidget):
         self._pull_worker = ModelPullWorker(repo_id.strip(), path=path, parent=self)
         self._pull_worker.finished_ok.connect(self._on_pull_finished)
         self._pull_worker.failed.connect(self._on_pull_failed)
+        self.status_label.setText("Downloading…")
         self._pull_worker.start()
 
     def _remove(self) -> None:
@@ -280,9 +283,11 @@ class ModelsPage(QWidget):
 
     def _on_pull_finished(self, name: str, _source: str) -> None:
         self.refresh()
+        self.status_label.setText("")
         QMessageBox.information(self, "Download complete", f"Imported voice model '{name}'.")
 
     def _on_pull_failed(self, message: str) -> None:
+        self.status_label.setText("Download failed.")
         QMessageBox.critical(self, "Download failed", message)
 
 

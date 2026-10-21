@@ -29,7 +29,7 @@ similar sites.
 - Headless engine with a desktop GUI (PySide6) and a CLI (`vivoice`)
 - Block-free, float32 processing at 48 kHz with multi-channel DSP support
 - Built-in effects: gain, pitch shift (phase vocoder), robot (ring modulation), echo,
-  three-band EQ, noise gate, reverb
+  three-band EQ, noise gate, reverb, formant shift
 - YAML presets and an effect registry (`vivoice effects`)
 - Real-time preview (`vivoice stream`) with a streaming pitch shifter; offline
   rendering keeps the higher-quality phase vocoder
@@ -71,6 +71,7 @@ vivoice process input.wav output.wav --preset examples/presets/robot.yaml
 vivoice effects                    # list registered effects
 vivoice schema                     # export JSON schemas for tooling
 vivoice devices                    # show the detected compute device
+vivoice doctor                     # diagnose the environment and dependencies
 vivoice model add voice.pth --name alice --index voice.index
 vivoice model list
 vivoice model pull wok000/vcclient000

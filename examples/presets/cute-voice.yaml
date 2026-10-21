@@ -1,0 +1,9 @@
+name: cute-voice
+description: Raise pitch and formants for a brighter character voice.
+chain:
+  - type: pitch
+    params:
+      semitones: 2
+  - type: formant
+    params:
+      semitones: 3

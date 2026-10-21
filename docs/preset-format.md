@@ -34,6 +34,7 @@ Rules:
 | `eq` | — | `low/mid/high_gain_db: 0.0`, `low/mid/high_freq: 200/1000/5000`, `q: 0.707` |
 | `noise-gate` | — | `threshold_db: -40.0`, `attack_ms: 5.0`, `release_ms: 100.0`, `floor_db: -80.0` |
 | `reverb` | — | `room_size: 0.5`, `damping: 0.5`, `mix: 0.25` |
+| `formant` | — | `semitones: 0.0` (range −12…12, offline) |
 | `voice-conversion` | `model` | `engine: rvc`, `device: auto`, `endpoint: http://127.0.0.1:7865`, `timeout: 300.0` |
 
 ## Streaming
@@ -48,5 +49,6 @@ for now.
 
 See [`examples/presets/`](../examples/presets/) for ready-to-use presets:
 `robot.yaml`, `pitch-up.yaml`, `deep-voice.yaml`, `broadcast.yaml`,
-`phone.yaml`, `ai-voice-rvc-hub.yaml` (`engine: rvc-hub`), and
+`phone.yaml`, `cute-voice.yaml` (pitch + formant),
+`ai-voice-rvc-hub.yaml` (`engine: rvc-hub`), and
 `ai-voice-http.yaml` (`engine: rvc-http`).

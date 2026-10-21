@@ -4,6 +4,21 @@ All notable changes to VIvoice are documented in this file. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [0.7.0] - 2026-10-21
+
+### Added
+
+- Formant (spectral-envelope) shift effect that changes voice character without
+  changing pitch, plus a `cute-voice.yaml` preset.
+- `vivoice doctor` environment diagnostics (dependency presence, compute
+  device, CUDA availability, voice-model count).
+- GUI download status indicator on the Models page.
+
+### Fixed
+
+- Local model imports now reject non-`.pth`/`.safetensors` checkpoints with a
+  clear error instead of registering unusable files.
+
 ## [0.6.0] - 2026-10-21
 
 ### Added

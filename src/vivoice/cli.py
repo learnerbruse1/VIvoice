@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import logging
 import sys
@@ -113,6 +114,9 @@ def build_parser() -> argparse.ArgumentParser:
     serve.add_argument("--host", default="127.0.0.1")
     serve.add_argument("--port", type=int, default=7865)
     serve.set_defaults(handler=_cmd_serve)
+
+    doctor = subparsers.add_parser("doctor", help="check the environment and dependencies")
+    doctor.set_defaults(handler=_cmd_doctor)
 
     gui = subparsers.add_parser("gui", help="launch the desktop application")
     gui.set_defaults(handler=_cmd_gui)
@@ -322,6 +326,40 @@ def _cmd_serve(args: argparse.Namespace) -> int:
     from vivoice.server import main as serve_main
 
     return serve_main(["--host", args.host, "--port", str(args.port)])
+
+
+def _cmd_doctor(args: argparse.Namespace) -> int:
+    checks = [
+        ("NumPy", "numpy"),
+        ("SciPy", "scipy"),
+        ("soundfile", "soundfile"),
+        ("PySide6", "PySide6"),
+        ("huggingface-hub", "huggingface_hub"),
+        ("PyTorch", "torch"),
+        ("torchaudio", "torchaudio"),
+        ("rvc-hub engine", "huggingface_hub_rvc"),
+        ("faiss", "faiss"),
+        ("sounddevice", "sounddevice"),
+    ]
+    print(f"vivoice {__version__} (Python {sys.version.split()[0]})")
+    for name, module in checks:
+        available = importlib.util.find_spec(module) is not None
+        print(f"{'OK' if available else 'MISSING':<8} {name:<18} ({module})")
+    print(f"compute device : {describe_device('auto')}")
+    try:
+        import torch
+
+        print(f"CUDA available : {bool(torch.cuda.is_available())}")
+    except ImportError:
+        print("CUDA available : unknown (PyTorch not installed)")
+    try:
+        models = ModelRegistry().all()
+        print(f"voice models  : {len(models)} in {models_root()}")
+    except VivoiceError as exc:
+        print(f"voice models  : unavailable ({exc})")
+    except OSError as exc:
+        print(f"voice models  : unavailable ({exc})")
+    return 0
 
 
 def _cmd_gui(args: argparse.Namespace) -> int:

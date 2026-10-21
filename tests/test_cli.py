@@ -72,3 +72,12 @@ def test_config_commands_roundtrip(tmp_path, monkeypatch, capsys) -> None:
     assert main(["config", "set", "sample_rate", "44100"]) == 0
     assert main(["config", "get", "sample_rate"]) == 0
     assert "44100" in capsys.readouterr().out
+
+
+def test_doctor_reports_environment(capsys) -> None:
+    assert main(["doctor"]) == 0
+    output = capsys.readouterr().out
+    assert "vivoice" in output
+    assert "NumPy" in output
+    assert "PyTorch" in output
+    assert "compute device" in output

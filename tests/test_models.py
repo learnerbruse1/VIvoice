@@ -50,6 +50,13 @@ def test_missing_checkpoint_is_rejected(tmp_path, registry: ModelRegistry) -> No
         registry.add("ghost", tmp_path / "missing.pth")
 
 
+def test_unsupported_checkpoint_format_is_rejected(tmp_path, registry: ModelRegistry) -> None:
+    checkpoint = tmp_path / "voice.txt"
+    checkpoint.write_bytes(b"not a checkpoint")
+    with pytest.raises(ModelError, match="Unsupported checkpoint format"):
+        registry.add("text", checkpoint)
+
+
 def test_pull_model_registers_checkpoint(tmp_path, monkeypatch) -> None:
     def fake_snapshot(repo_id: str, local_dir: str, revision: str | None) -> str:
         directory = Path(local_dir)
